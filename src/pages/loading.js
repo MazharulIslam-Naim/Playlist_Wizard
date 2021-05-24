@@ -1,3 +1,5 @@
+// User gets redirected here for a second to request access token from spotify
+// and then redirected to main page.
 import React, { Component } from 'react';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
@@ -8,18 +10,16 @@ var url = require('url');
 export default class Loading extends Component {
   constructor(props) {
     super(props);
-    this.getUser = this.getUser.bind(this);
-    this.userFind = this.userFind.bind(this);
-    this.userCreate = this.userCreate.bind(this);
-    this.userUpdate = this.userUpdate.bind(this);
 
     this.state = {
       redirect: '',
       authToken: {},
+      id: '',
       email: ''
     }
   }
 
+  // Parse the current url for the spotify code then request tokens from spotify.
   componentDidMount() {
     var urlp = url.parse(document.URL, true)
     var urldata = urlp.query
@@ -32,44 +32,47 @@ export default class Loading extends Component {
           this.setState({ authToken: res.data })
           this.getUser()
         })
-        .catch((error) => {
-          console.log(error)
-        })
+        .catch(error => console.log(error))
     }
   }
 
+  // Get user object from spotify.
   getUser() {
     const user = { access_token: this.state.authToken.access_token }
     axios.post('http://localhost:5000/authorize/user', user)
       .then(res => {
-        this.setState({ email: res.data.email })
+        this.setState({ email: res.data.email, id: res.data.id })
         this.userFind()
       })
-      .catch((error) => {
-        console.log(error)
-      })
+      .catch(error => console.log(error))
   }
 
+  // Find the user in the database.
   userFind() {
     axios.get('http://localhost:5000/user/'+this.state.email)
       .then(res => {
         if (res.data.length == 0) {
+          // Create user in database if user doesn't exist.
           this.userCreate()
         } else {
+          // Update user in database.
           this.userUpdate()
         }
       })
-      .catch((error) => {
-        console.log(error)
-      })
+      .catch(error => console.log(error))
   }
 
+  // Create user in database.
   userCreate() {
+    var dt = new Date();
+    dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 );
     const user = {
+      id: this.state.id,
       email: this.state.email,
       access_token: this.state.authToken.access_token,
       expires_in: this.state.authToken.expires_in,
       refresh_token: this.state.authToken.refresh_token,
+      expire_time: dt,
     }
 
     axios.post('http://localhost:5000/user/add', user)
@@ -77,17 +80,20 @@ export default class Loading extends Component {
         console.log(res.data)
         this.setState({ redirect: 'user' })
       })
-      .catch((error) => {
-        console.log(error)
-      })
+      .catch(error => console.log(error))
   }
 
+  // Update user in database.
   userUpdate() {
+    var dt = new Date();
+    dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 );
     const user = {
+      id: this.state.id,
       email: this.state.email,
       access_token: this.state.authToken.access_token,
       expires_in: this.state.authToken.expires_in,
       refresh_token: this.state.authToken.refresh_token,
+      expire_time: dt,
     }
 
     axios.post('http://localhost:5000/user/update', user)
@@ -95,9 +101,7 @@ export default class Loading extends Component {
         console.log(res.data)
         this.setState({ redirect: 'user' })
       })
-      .catch((error) => {
-        console.log(error)
-      })
+      .catch(error => console.log(error))
   }
 
   render() {

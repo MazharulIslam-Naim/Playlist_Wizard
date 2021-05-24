@@ -20,9 +20,12 @@ connection.once('open', () => {
 
 const authorizeRouter = require('./routes/authorize');
 const userRouter = require('./routes/user');
+const playlistRouter = require('./routes/playlist');
 
+// Routes
 app.use('/authorize', authorizeRouter);
 app.use('/user', userRouter);
+app.use('/playlist', playlistRouter);
 
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);

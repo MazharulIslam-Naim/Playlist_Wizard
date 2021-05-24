@@ -1,3 +1,4 @@
+// First page the user starts of on.
 import React, { Component } from 'react';
 import Button from '@material-ui/core/Button';
 import axios from 'axios';
@@ -6,17 +7,14 @@ import './login.css';
 export default class Login extends Component {
   constructor(props) {
     super(props);
-    this.onLogin = this.onLogin.bind(this);
   }
 
-  onLogin() {
+  // Function called when the user clicks to login. Gets the url to redirt to
+  // spotify login.
+  onLogin = () => {
     axios.get('http://localhost:5000/authorize')
-      .then(res => {
-        window.open(res.data, "_self")
-      })
-      .catch((error) => {
-        console.log(error)
-      })
+      .then(res => window.open(res.data, "_self"))
+      .catch(error => console.log(error))
   }
 
   render() {
