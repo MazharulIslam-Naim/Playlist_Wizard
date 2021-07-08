@@ -78,7 +78,7 @@ router.route('/update').post((req, res) => {
 // Return:
 // - access_token: new access_token
 // - expires_in
-router.route('/refresh_token/:refresh_token').get((req, res) => {
+router.route('/refresh_token').post((req, res) => {
   const headers = {
     headers: {
       Accept: 'application/json',
@@ -91,12 +91,12 @@ router.route('/refresh_token/:refresh_token').get((req, res) => {
   };
   const data = {
     grant_type: 'refresh_token',
-    refresh_token: req.params.refresh_token
+    refresh_token: req.body.refresh_token
   };
 
   axios.post('https://accounts.spotify.com/api/token', qs.stringify(data), headers)
     .then(response => res.json(response.data))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 module.exports = router;

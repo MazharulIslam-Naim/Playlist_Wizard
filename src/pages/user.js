@@ -24,51 +24,78 @@ export default class User extends Component {
     await axios.get('http://localhost:5000/user/' + this.props.location.state.email)
       .then(res => this.setState({ user: res.data[0] }))
       .catch(error => console.log(error))
-    this.getPlaylists(0)
+    this.timeToRefreshToken()
+    this.getPlaylists(0, true)
   }
 
-  // When pages updates call the refresh token function.
-  componentDidUpdate(prevProps) {
-    this.refreshToken()
+  componentWillUnmount() {
+    if (this.timerHandle) {
+      clearTimeout(this.timerHandle)
+      this.timerHandle = 0
+    }
   }
 
-  // refresh the access token.
-  async refreshToken() {
+  // Calls the refreshToken function a minute before the token expires.
+  timeToRefreshToken() {
     var currTime = new Date()
-    if (this.state.user && this.state.user.expire_time < currTime.toISOString()) {
-      await axios.get('http://localhost:5000/user/refresh_token/'+this.state.user.refresh_token)
+    var expireTime = new Date(this.state.user.expire_time)
+
+    if (expireTime <= currTime) {
+      this.refreshToken()
+    }
+    else {
+      this.timerHandle = setTimeout(() => this.refreshToken(), expireTime - currTime)
+    }
+  }
+
+  // Refresh the access token and add it to the database.
+  refreshToken() {
+    var currTime = new Date()
+    var expireTime = new Date(this.state.user.expire_time)
+
+    if (expireTime <= currTime) {
+      axios.post('http://localhost:5000/user/refresh_token/', {refresh_token: this.state.user.refresh_token})
         .then(res => {
-          var dt = new Date();
-          dt.setSeconds( dt.getSeconds() + res.data.expires_in - 60 );
+          currTime.setSeconds( currTime.getSeconds() + res.data.expires_in - 60 )
           const newToken = {
             id: this.state.user.id,
             email: this.state.user.email,
             access_token: res.data.access_token,
             expires_in: res.data.expires_in,
             refresh_token: this.state.user.refresh_token,
-            expire_time: dt,
+            expire_time: currTime,
           }
 
           this.setState({ user: newToken })
           axios.post('http://localhost:5000/user/update', newToken)
-            .then(res => console.log(res.data))
+            .then(res => {
+              console.log(res.data + " " + "Access token refreshed.")
+              this.timeToRefreshToken()
+            })
             .catch(error => console.log(error))
-          console.log("Access token refreshed.")
         })
         .catch(error => console.log(error))
     }
   }
 
   // Request the playlist of the current user.
-  getPlaylists(offset) {
-    axios.post('http://localhost:5000/playlist/', {access_token: this.state.user.access_token, offset: offset})
+  getPlaylists(offset, changeToFirst) {
+    axios.get('http://localhost:5000/playlist/', {params: {access_token: this.state.user.access_token, offset: offset}})
       .then(res => {
-        this.setState({ playlists: this.state.playlists.concat(res.data.items) })
+        this.setState(previousState => ({
+          playlists: previousState.playlists.concat(res.data.items)
+        }))
         if (res.data.next) {
-          this.getPlaylists(offset + 50)
+          this.getPlaylists(offset + 50, false)
         }
+
         if (res.data.items.length != 0) {
-          this.selectPlaylist(res.data.items[0].id)
+          if (changeToFirst) {
+            this.selectPlaylist(res.data.items[0].id)
+          }
+        }
+        else {
+          this.selectPlaylist("Liked Songs")
         }
       })
       .catch(error => console.log(error))
@@ -78,36 +105,40 @@ export default class User extends Component {
   selectPlaylist = playlistId => this.setState({ selectedPlaylist: playlistId })
 
   // Refresh the list of playlists.
-  updatePlaylists = () => {
+  updatePlaylists = changeToFirst => {
     this.setState({ playlists: [] })
-    this.getPlaylists(0)
+    this.getPlaylists(0, changeToFirst)
   }
 
   render() {
-    //Figure out how to redirect people form /user to homepage if no props sent.
-    // try {
-    //   if (this.props.location.state.email == 'undefined') {}
-    // }
-    // catch(e) {
-    //   return <Redirect to="/" push />
-    // }
-    this.refreshToken()
+    try {
+      if (this.props.location.state.email == 'undefined') {}
+    }
+    catch(e) {
+      return <Redirect to="/" push />
+    }
+
     return (
-      <div>
-        <Grid container spacing={0}>
-          <Grid item xs={2}>
-            <Sidebar
-              userToken={this.state.user.access_token}
-              userId={this.state.user.id}
-              onSelectPlaylist={this.selectPlaylist}
-              playlists={this.state.playlists}
-              updatePlaylists={this.updatePlaylists}
-            />
-          </Grid>
-          <Grid item xs={10}>
-            <Main user = {this.state.user.access_token} playlistId = {this.state.selectedPlaylist} />
-          </Grid>
-        </Grid>
+      <div
+        style={{
+          backgroundColor: "#282c34",
+          overflow: "auto"
+        }}
+      >
+        <Sidebar
+          userToken={this.state.user.access_token}
+          userId={this.state.user.id}
+          selectedPlaylist={this.state.selectedPlaylist}
+          onSelectPlaylist={this.selectPlaylist}
+          playlists={this.state.playlists}
+          updatePlaylists={this.updatePlaylists}
+        />
+        <Main
+          user={this.state.user.access_token}
+          userId={this.state.user.id}
+          playlistId={this.state.selectedPlaylist}
+          updatePlaylists={this.updatePlaylists}
+        />
       </div>
     )
   }

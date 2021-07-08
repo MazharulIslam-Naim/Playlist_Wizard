@@ -7,39 +7,37 @@ const axios = require('axios');
 // - offset: the index where the result array should start from
 // Return:
 // - playlist objects: (see spotify api reference)
-router.route('/').post((req, res) => {
+router.route('/').get((req, res) => {
   axios({
     method: 'get',
     url: 'https://api.spotify.com/v1/me/playlists',
-    headers: {Authorization: 'Bearer '+ req.body.access_token},
+    headers: {Authorization: 'Bearer '+ req.query.access_token},
     params: {
       limit: 50,
-      offset: req.body.offset
+      offset: req.query.offset
     },
   })
     .then(response => res.json(response.data))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
-// Get a list of the playlist's songs. (max 100)
+// Get a specified playlist's information.
 // Params:
 // - access_token
 // - playlist_id
-// - offset: the index where the result array should start from
 // Return:
-// - song track objects: array of tracks in the playlist
-router.route('/playlist_items').post((req, res) => {
+// - playlist's information
+router.route('/info').get((req, res) => {
   axios({
     method: 'get',
-    url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id + '/tracks',
-    headers: {Authorization: 'Bearer '+ req.body.access_token},
+    url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id,
+    headers: {Authorization: 'Bearer '+ req.query.access_token},
     params: {
-      limit: 100,
-      offset: req.body.offset
+      fields: "collaborative, owner.id"
     },
   })
     .then(response => res.json(response.data))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 // Create a new playlist.
@@ -60,23 +58,23 @@ router.route('/new').post((req, res) => {
     },
   })
     .then(response => res.json(response.data))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 // Delete a playlist.
 // Params:
 // - access_token
 // - playlist_id
-router.route('/delete').post((req, res) => {
+router.route('/delete').delete((req, res) => {
   axios({
     method: 'delete',
-    url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id + '/followers',
+    url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id + '/followers',
     headers: {
-      Authorization: 'Bearer '+ req.body.access_token,
+      Authorization: 'Bearer '+ req.query.access_token,
     },
   })
     .then(() => res.json('Playlist deleted.'))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 // Rename a Playlist
@@ -97,7 +95,85 @@ router.route('/rename').put((req, res) => {
     },
   })
     .then(() => res.json('Playlist renamed'))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
+});
+
+// Get the current user's saved songs. (max 50)
+// Params:
+// - access_token
+// - offset: the index where the result array should start from
+// Return:
+// - song track objects: array of tracks in the 'Your Music' library
+router.route('/saved_items').get((req, res) => {
+  axios({
+    method: 'get',
+    url: 'https://api.spotify.com/v1/me/tracks',
+    headers: {
+      Authorization: 'Bearer '+ req.query.access_token,
+    },
+    params: {
+      limit: 50,
+      offset: req.query.offset
+    },
+  })
+    .then(response => res.json(response.data))
+    .catch(err => res.status(400).json('Error: ' + err))
+});
+
+// Not Used Yet
+// Delete the songs saved in the user's saved songs. (max 50)
+router.route('/saved_items').delete((req, res) => {
+  axios({
+    method: 'delete',
+    url: 'https://api.spotify.com/v1/me/tracks',
+    headers: {
+      Authorization: 'Bearer '+ req.query.access_token,
+    },
+    data: {
+      uris: req.body.songs
+    },
+  })
+    .then(response => res.json(response.data))
+    .catch(err => res.status(400).json('Error: ' + err))
+});
+
+// Not Used Yet
+// Add to the user's saved songs. (max 50)
+router.route('/saved_items').put((req, res) => {
+  axios({
+    method: 'put',
+    url: 'https://api.spotify.com/v1/me/tracks',
+    headers: {
+      Authorization: 'Bearer '+ req.query.access_token,
+    },
+    data: {
+      uris: req.body.songs
+    },
+  })
+    .then(response => res.json(response.data))
+    .catch(err => res.status(400).json('Error: ' + err))
+});
+
+
+// Get a list of the playlist's songs. (max 100)
+// Params:
+// - access_token
+// - playlist_id
+// - offset: the index where the result array should start from
+// Return:
+// - song track objects: array of tracks in the playlist
+router.route('/playlist_items').get((req, res) => {
+  axios({
+    method: 'get',
+    url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id + '/tracks',
+    headers: {Authorization: 'Bearer '+ req.query.access_token},
+    params: {
+      limit: 100,
+      offset: req.query.offset
+    },
+  })
+    .then(response => res.json(response.data))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 // Add Items to a Playlist
@@ -118,12 +194,14 @@ router.route('/add').post((req, res) => {
     },
   })
     .then(() => res.json('Songs added to playlist.'))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
-
-
 // Reorder or Replace a Playlist's Items
+// Params:
+// - access_token
+// - playlist_id
+// - songs: array of songs to be replaced with in the playlist
 router.route('/replace').put((req, res) => {
   axios({
     method: 'put',
@@ -133,10 +211,12 @@ router.route('/replace').put((req, res) => {
       uris: req.body.songs
     },
   })
-    .then(() => res.json('Playlist replaced.'))
-    .catch(error => console.log(error))
+    .then(() => res.json('Playlist songs replaced.'))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
+
+// Not Used Yet
 // Remove Items from a Playlist
 router.route('/playlist_items').delete((req, res) => {
   axios({
@@ -151,7 +231,7 @@ router.route('/playlist_items').delete((req, res) => {
     },
   })
     .then(() => res.json('Songs removed from playlist.'))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 

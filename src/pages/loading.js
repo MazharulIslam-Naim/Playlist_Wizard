@@ -27,19 +27,21 @@ export default class Loading extends Component {
       this.setState({ redirect: 'homepage' })
     }
     else {
-      axios.get('http://localhost:5000/authorize/'+urldata.code)
+      axios.post('http://localhost:5000/authorize/code', {code: urldata.code})
         .then(res => {
           this.setState({ authToken: res.data })
           this.getUser()
         })
-        .catch(error => console.log(error))
+        .catch(error => {
+          console.log(error)
+          this.setState({ redirect: 'homepage' })
+        })
     }
   }
 
   // Get user object from spotify.
   getUser() {
-    const user = { access_token: this.state.authToken.access_token }
-    axios.post('http://localhost:5000/authorize/user', user)
+    axios.get('http://localhost:5000/authorize/user', {params: {access_token: this.state.authToken.access_token}})
       .then(res => {
         this.setState({ email: res.data.email, id: res.data.id })
         this.userFind()
@@ -49,7 +51,7 @@ export default class Loading extends Component {
 
   // Find the user in the database.
   userFind() {
-    axios.get('http://localhost:5000/user/'+this.state.email)
+    axios.get('http://localhost:5000/user/' + this.state.email)
       .then(res => {
         if (res.data.length == 0) {
           // Create user in database if user doesn't exist.
@@ -64,8 +66,8 @@ export default class Loading extends Component {
 
   // Create user in database.
   userCreate() {
-    var dt = new Date();
-    dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 );
+    var dt = new Date()
+    dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 )
     const user = {
       id: this.state.id,
       email: this.state.email,
@@ -85,8 +87,8 @@ export default class Loading extends Component {
 
   // Update user in database.
   userUpdate() {
-    var dt = new Date();
-    dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 );
+    var dt = new Date()
+    dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 )
     const user = {
       id: this.state.id,
       email: this.state.email,

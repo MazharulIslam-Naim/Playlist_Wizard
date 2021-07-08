@@ -7,7 +7,7 @@ const client_secret = process.env.client_secret;
 const scope = process.env.scope;
 var redirect_uri = process.env.redirect_uri;
 
-// Returns the url to ridirect the user to login to thier spotify account and
+// Returns the url to redirect the user to login to their spotify account and
 // allow access to the app.
 // Return:
 // - url: url to redirect to
@@ -28,7 +28,7 @@ router.route('/').get((req, res) => {
 // - access_token
 // - expires_in: The time period (in seconds) for which the access token is valid.
 // - refresh_token
-router.route('/:code').get((req, res) => {
+router.route('/code').post((req, res) => {
   const headers = {
     headers: {
       Accept: 'application/json',
@@ -41,13 +41,13 @@ router.route('/:code').get((req, res) => {
   };
   const data = {
     grant_type: 'authorization_code',
-    code: req.params.code,
+    code: req.body.code,
     redirect_uri: redirect_uri
   };
 
   axios.post('https://accounts.spotify.com/api/token', qs.stringify(data), headers)
     .then(response => res.json(response.data))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 // Request current user's information from spotify.
@@ -55,14 +55,14 @@ router.route('/:code').get((req, res) => {
 // access_token
 // Return:
 // - user object: (see spotify api reference)
-router.route('/user').post((req, res) => {
+router.route('/user').get((req, res) => {
   axios({
     method: 'get',
     url: 'https://api.spotify.com/v1/me',
-    headers: {Authorization: 'Bearer '+req.body.access_token},
+    headers: {Authorization: 'Bearer ' + req.query.access_token},
   })
     .then(response => res.json(response.data))
-    .catch(error => console.log(error))
+    .catch(err => res.status(400).json('Error: ' + err))
 });
 
 module.exports = router;
