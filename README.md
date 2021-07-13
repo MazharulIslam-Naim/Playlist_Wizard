@@ -1,10 +1,11 @@
-# Getting Started with Create React App
+# Playlist Wizard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+##### Organize, view and create Spotify playlists easily! Playlist wizard allows you to create new playlists effortlessly by searching Spotify and picking songs from your own playlists. You can also sort the playlists by song name, album, and date added. The playlist on shuffle with no repeating songs.
 
-## Available Scripts
 
-In the project directory, you can run:
+## Run the application in development
+
+In one console run:
 
 ### `npm start`
 
@@ -14,57 +15,32 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
-### `npm test`
+#### and
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+in another console go to the backend folder and run
 
-### `npm run build`
+### `nodemon server`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Runs a express server using MongoDB as the database.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### However
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+In order for the backend to work you need to add MongoDB and Spotify. First
+create a copy of the file **.env.sample** and name it **.env** and save it in the same folder.
 
-### `npm run eject`
+#####  MongoDB
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+1. The first step is to make an account at the [MongoDB Atlas website](https://www.mongodb.com/cloud/atlas?utm_campaign=atlas_bc_mern&utm_source=medium&utm_medium=inf&utm_term=campaign_term&utm_content=campaign_content)
+2. Go through the steps of creating a cluster. There are free and paid options for hosting the database.
+3. After the cluster is created, click the connect button to connect to the cluster. For the IP address just use your current IP address and create a database user.
+4. For the connection method, click on the second option **Connect Your Application**.
+5. Replace **[MongoDB Atlas URI]** in the **.env** file you created earlier with the connection string. Remember to change **&lt;password&gt;** in the connection string with the password of the user you made earlier.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#####  Spotify
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+1. Login/Sign up to [Spotify's developer dashboard](https://developer.spotify.com/dashboard/).
+2. Click on Create an app and go through the process of creating an app.
+3. Replace **[Spotify Client ID]** and **[Spotify Client Secret]** in the **.env** file with the client id and secret that can be found on the newly created app.
+4. Click on **Edit Settings** and add **http://localhost:3000/loading** to **Redirect URIs**.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+If there are any errors please feel free to submit a issue and if you would like to add to this project you can submit a pull request with the changes.
