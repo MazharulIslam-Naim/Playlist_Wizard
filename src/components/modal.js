@@ -6,14 +6,37 @@ import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Modal from '@material-ui/core/Modal';
 import Paper from '@material-ui/core/Paper';
+import Switch from '@material-ui/core/Switch';
 import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
 
 const styles = theme => ({
-  root: {
+  paper: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)"
+  },
+  modalBody: {
     margin: "20px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center"
+  },
+  switchesContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-end"
+  },
+  publicSwitchContainer: {
+    display: "flex",
+    alignItems: "center",
+    marginRight: "40px"
+  },
+  switchLabels: {
+    color: "black",
+    width: "auto"
   },
   buttons: {
     display: "flex",
@@ -42,26 +65,39 @@ class PlaylistModel extends Component {
 
     this.state = {
       name: "",
+      description: "",
       newPlaylistId: "",
-      playlistItems: []
+      playlistItems: [],
+      public: false,
+      collaborative: false
     }
   }
 
+  // If the name, description, public, or collaborative status of the playlist that is sent changes then update.
   componentDidUpdate(prevProps) {
-    if (this.props.modalType.name !== prevProps.modalType.name) {
-      this.setState({ name: this.props.modalType.name })
-
+    if (this.props.modalInfo.name !== prevProps.modalInfo.name ||
+        this.props.modalInfo.description !== prevProps.modalInfo.description ||
+        this.props.modalInfo.public !== prevProps.modalInfo.public ||
+        this.props.modalInfo.collaborative !== prevProps.modalInfo.collaborative
+      ) {
+      this.setState({
+        name: this.props.modalInfo.name,
+        description: this.props.modalInfo.description,
+        public: this.props.modalInfo.public,
+        collaborative: this.props.modalInfo.collaborative
+       })
     }
   }
 
   // Request to create a new playlist.
   createPlaylist = () => {
-    axios.post('http://localhost:5000/playlist/new', {access_token: this.props.accessToken, user_id: this.props.modalType.userId, name: this.state.name})
+    axios.post('http://localhost:5000/playlist/new', {access_token: this.props.accessToken, user_id: this.props.modalInfo.userId, name: this.state.name})
       .then(res => {
         this.setState({ newPlaylistId: res.data.id })
-        if (this.props.modalType.type  == "new") {
+        if (this.props.modalInfo.modalType  == "New") {
           this.props.updatePlaylists(true)
         }
+        this.editInfoPlaylist()
       })
       .catch(error => console.log(error))
     this.props.closeModal()
@@ -71,11 +107,11 @@ class PlaylistModel extends Component {
   duplicatePlaylist = () => {
     this.createPlaylist()
     this.setState({ playlistItems: [] })
-    if (this.props.modalType.playlistId == "Liked Songs") {
+    if (this.props.modalInfo == "Liked Songs") {
       this.getSavedItems(0)
     }
     else {
-        this.getPlaylistItems(0)
+      this.getPlaylistItems(0)
     }
     this.props.closeModal()
   }
@@ -102,7 +138,7 @@ class PlaylistModel extends Component {
   // Gets all the songs in the current playlist and saves only the uri of each song.
   getPlaylistItems(offset) {
     axios.get('http://localhost:5000/playlist/playlist_items',
-      {params: {access_token: this.props.accessToken, playlist_id: this.props.modalType.playlistId, offset: offset}}
+      {params: {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id, offset: offset}}
     )
       .then(res => {
         res.data.items.forEach((item, i) => {
@@ -122,7 +158,7 @@ class PlaylistModel extends Component {
 
   // Request to add all the songs from the ones saved in state to the selected playlist.
   addToPlaylist(offset) {
-    if (this.state.playlistItems > 0) {
+    if (this.state.playlistItems.length > 0) {
       if (this.state.playlistItems.length - offset <= 100) {
         axios.post('http://localhost:5000/playlist/add',
         {access_token: this.props.accessToken,
@@ -145,20 +181,46 @@ class PlaylistModel extends Component {
     }
   }
 
-  // Request to rename a playlist.
-  renamePlaylist = () => {
-    axios.put('http://localhost:5000/playlist/rename', {access_token: this.props.accessToken, playlist_id: this.props.modalType.playlistId, name: this.state.name})
-      .then(() => this.props.updatePlaylists(false))
+  // Request to edit the info of a playlist.
+  editInfoPlaylist = () => {
+    axios.put('http://localhost:5000/playlist/edit', {
+      access_token: this.props.accessToken,
+      playlist_id: this.props.modalInfo.modalType  == "EditInfo" ? this.props.modalInfo.id : this.state.newPlaylistId,
+      name: this.state.name,
+      description: this.state.description,
+      public: this.state.public,
+      collaborative: this.state.collaborative
+    })
+      .then(() => {
+        this.props.updatePlaylists(false)
+      })
       .catch(error => console.log(error))
     this.props.closeModal()
   }
 
   // Request to delete a playlist.
   deletePlaylist = () => {
-    axios.delete('http://localhost:5000/playlist/delete', {params: {access_token: this.props.accessToken, playlist_id: this.props.modalType.playlistId}})
+    axios.delete('http://localhost:5000/playlist/delete', {params: {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id}})
       .then(() => this.props.updatePlaylists(true))
       .catch(error => console.log(error))
     this.props.closeModal()
+  }
+
+  // Change the public button slider.
+  changePublicStatus = () => {
+    if (!this.state.public) {
+      this.setState({ collaborative: false })
+    }
+    this.setState({ public: !this.state.public })
+  }
+
+  // Change the collaborative button slider.
+  changeCollaborativeStatus = () => {
+    if (!this.state.public) {
+      this.setState({ collaborative: !this.state.collaborative })
+      return
+    }
+    this.setState({ collaborative: false })
   }
 
   // New playlist modal body.
@@ -166,14 +228,48 @@ class PlaylistModel extends Component {
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
-        <h2>Give the new playlist a title:</h2>
+      <div className={classes.modalBody}>
+        <h2>Please change the new playlist's info to your specifications:</h2>
         <TextField
           required
-          label="Required"
+          label="Name"
           defaultValue={this.state.name}
           onChange={e => this.setState({ name: e.target.value })}
         />
+        <TextField
+          label="Description"
+          defaultValue={this.state.description}
+          onChange={e => this.setState({ description: e.target.value })}
+        />
+        <div className={classes.switchesContainer}>
+          <div className={classes.publicSwitchContainer}>
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Private
+            </Typography>
+            <Switch
+              checked={this.state.public}
+              onChange={() => this.changePublicStatus()}
+              color="primary"
+              name="Public"
+              inputProps={{ 'aria-label': 'Public checkbox' }}
+            />
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Public
+            </Typography>
+          </div>
+          <div>
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Collaborative
+            </Typography>
+            <Switch
+              checked={this.state.collaborative}
+              onChange={() => this.changeCollaborativeStatus()}
+              color="primary"
+              name="Collaborative"
+              inputProps={{ 'aria-label': 'Collaborative checkbox' }}
+            />
+          </div>
+        </div>
         <div className={classes.buttons}>
           <Button
             variant="contained"
@@ -194,14 +290,48 @@ class PlaylistModel extends Component {
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
-        <h2>Would you like to give the duplicate playlist a different name?</h2>
+      <div className={classes.modalBody}>
+        <h2>Please change the duplicate playlist's info to your specifications:</h2>
         <TextField
           required
-          label="Required"
+          label="Name"
           defaultValue={this.state.name}
           onChange={e => this.setState({ name: e.target.value })}
         />
+        <TextField
+          label="Description"
+          defaultValue={this.state.description}
+          onChange={e => this.setState({ description: e.target.value })}
+        />
+        <div className={classes.switchesContainer}>
+          <div className={classes.publicSwitchContainer}>
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Private
+            </Typography>
+            <Switch
+              checked={this.state.public}
+              onChange={() => this.changePublicStatus()}
+              color="primary"
+              name="Public"
+              inputProps={{ 'aria-label': 'Public checkbox' }}
+            />
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Public
+            </Typography>
+          </div>
+          <div>
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Collaborative
+            </Typography>
+            <Switch
+              checked={this.state.collaborative}
+              onChange={() => this.changeCollaborativeStatus()}
+              color="primary"
+              name="Collaborative"
+              inputProps={{ 'aria-label': 'Collaborative checkbox' }}
+            />
+          </div>
+        </div>
         <div className={classes.buttons}>
           <Button
             variant="contained"
@@ -217,27 +347,62 @@ class PlaylistModel extends Component {
     )
   }
 
-  // Rename playlist modal body.
-  renamePLBody() {
+  // Edit playlist info modal body.
+  editInfoPLBody() {
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
-        <h2>Give a different name to the playlist: <u>{this.props.modalType.name}</u>?</h2>
+      <div className={classes.modalBody}>
+        <h2>Edit details of playlist <u>{this.props.modalInfo.name}</u>:</h2>
         <TextField
           required
-          label="Required"
+          label="Name"
           defaultValue={this.state.name}
           onChange={e => this.setState({ name: e.target.value })}
         />
+        <TextField
+          required={this.props.modalInfo.description ? true : false}
+          label="Description"
+          defaultValue={this.state.description}
+          onChange={e => this.setState({ description: e.target.value })}
+        />
+        <div className={classes.switchesContainer}>
+          <div className={classes.publicSwitchContainer}>
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Private
+            </Typography>
+            <Switch
+              checked={this.state.public}
+              onChange={() => this.changePublicStatus()}
+              color="primary"
+              name="Public"
+              inputProps={{ 'aria-label': 'Public checkbox' }}
+            />
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Public
+            </Typography>
+          </div>
+          <div>
+            <Typography variant="body2" gutterBottom className={classes.switchLabels}>
+              Collaborative
+            </Typography>
+            <Switch
+              checked={this.state.collaborative}
+              onChange={() => this.changeCollaborativeStatus()}
+              color="primary"
+              name="Collaborative"
+              inputProps={{ 'aria-label': 'Collaborative checkbox' }}
+            />
+          </div>
+        </div>
         <div className={classes.buttons}>
           <Button
             variant="contained"
-            disabled={this.state.name == ""}
-            onClick={() => this.renamePlaylist()}
+            disabled={this.state.name == "" || (this.props.modalInfo.description ? !this.state.description : false)}
+            onClick={() => this.editInfoPlaylist()}
             classes={{root: classes.success}}
           >
-            Rename
+            Edit Info
           </Button>
           <Button variant="contained" onClick={() => this.props.closeModal()}>Cancel</Button>
         </div>
@@ -250,8 +415,8 @@ class PlaylistModel extends Component {
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
-        <h2>Are you sure you want to delete the playlist: <u>{this.props.modalType.name}</u>?</h2>
+      <div className={classes.modalBody}>
+        <h2>Are you sure you want to delete the playlist: <u>{this.props.modalInfo.name}</u>?</h2>
         <div className={classes.buttons}>
           <Button
             variant="contained"
@@ -274,22 +439,15 @@ class PlaylistModel extends Component {
         open={this.props.open}
         onClose={() => this.props.closeModal()}
       >
-        <Paper
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)"
-          }}
-        >
+        <Paper className={classes.paper}>
           {
-            this.props.modalType.type  == "new" ?
+            this.props.modalInfo.modalType  == "New" ?
               this.newPLBody()
-              : this.props.modalType.type  == "Duplicate" ?
+              : this.props.modalInfo.modalType  == "Duplicate" ?
                 this.duplicatePLBody()
-                : this.props.modalType.type  == "Rename" ?
-                  this.renamePLBody()
-                  : this.props.modalType.type  == "Delete" ?
+                : this.props.modalInfo.modalType  == "EditInfo" ?
+                  this.editInfoPLBody()
+                  : this.props.modalInfo.modalType  == "Delete" ?
                     this.deletePLBody()
                     : <div/>
           }

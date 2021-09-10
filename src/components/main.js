@@ -3,6 +3,9 @@ import axios from 'axios';
 
 import { withStyles } from '@material-ui/core/styles';
 
+import Paper from '@material-ui/core/Paper';
+import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import FavoriteIcon from '@material-ui/icons/Favorite';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -13,9 +16,10 @@ import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 import Avatar from '@material-ui/core/Avatar';
+
+import PlaylistModel from './modal';
 
 const styles = theme => ({
   paper: {
@@ -33,8 +37,57 @@ const styles = theme => ({
     justifyContent: "center",
     alignItems: "center",
   },
+  infoPaper: {
+    backgroundColor: "#16191d",
+    minHeight: "200px",
+    height: "20%",
+    color: "white",
+    display: "flex",
+    alignContent: "center",
+    alignItems: "center",
+  },
+  playlistImage: {
+    height: "150px",
+    width: "150px",
+    margin: "0px 30px",
+  },
+  likedSongsImage: {
+    backgroundColor: "#1db954",
+    height: "150px",
+    width: "150px",
+    margin: "0px 30px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heartIcon: {
+    height: "4em",
+    width: "4em",
+  },
+  playlistInfo: {
+    fontWeight: "bold"
+  },
+  infoPC: {
+    display: "flex"
+  },
+  dotPC: {
+    fontSize: "0.6rem",
+    margin: "0px 3px",
+    fill: "#1db954"
+  },
+  playlistTitle: {
+    "&:hover": {
+      cursor: "pointer"
+    }
+  },
+  dot: {
+    fill: "#1db954",
+    width: "0.5em",
+    height: "0.5em",
+    margin: "0px 5px"
+  },
   rootTableContainer: {
-    height: "100vh"
+    height: "100%"
   },
   headerColor: {
     backgroundColor: "#21252b",
@@ -131,27 +184,35 @@ class Main extends Component {
       orderBy: 'Id',
       order: 'asc',
       checked: [],
-      userInfo: {collaborative: false, owner: {id: ""}},
+      showModal: false,
+      modalInfo: {},
     }
   }
 
   // If the playlist seleceted changes then update
   componentDidUpdate(prevProps) {
     if (this.props.playlistId !== prevProps.playlistId) {
-      this.setState({ playlistItems: [], orderBy: 'Id', order: 'asc', userInfo: {collaborative: false, owner: {id: ""}} })
+      this.setState({
+        playlistItems: [],
+        orderBy: 'Id',
+        order: 'asc',
+        checked: [],
+        showModal: false,
+        modalInfo: {}
+      })
       if (this.props.playlistId == "Liked Songs") {
         this.getSavedItems(0)
       }
       else {
         this.getPlaylistItems(0)
-        this.getPlaylistInfo()
+
       }
     }
   }
 
   // Request to get all the songs of the selected palylist
   getPlaylistItems(offset) {
-    axios.get('http://localhost:5000/playlist/playlist_items', {params: {access_token: this.props.user, playlist_id: this.props.playlistId, offset: offset}})
+    axios.get('http://localhost:5000/playlist/playlist_items', {params: {access_token: this.props.userToken, playlist_id: this.props.playlistId, offset: offset}})
       .then(res => {
         this.setState(previousState => ({
           playlistItems: previousState.playlistItems.concat(res.data.items)
@@ -165,7 +226,7 @@ class Main extends Component {
 
   // Request to get all of the user's saved songs
   getSavedItems(offset) {
-    axios.get('http://localhost:5000/playlist/saved_items', {params: {access_token: this.props.user, offset: offset} })
+    axios.get('http://localhost:5000/playlist/saved_items', {params: {access_token: this.props.userToken, offset: offset} })
       .then(res => {
         this.setState(previousState => ({
           playlistItems: previousState.playlistItems.concat(res.data.items)
@@ -175,17 +236,6 @@ class Main extends Component {
         }
       })
       .catch(error => console.log(error))
-  }
-
-  // Request to get the the current playlist's information.
-  getPlaylistInfo() {
-    if (this.props.playlistId != "Liked Songs") {
-      axios.get('http://localhost:5000/playlist/info', {params: {access_token: this.props.user, playlist_id: this.props.playlistId} })
-        .then(res => {
-          this.setState({ userInfo: res.data })
-        })
-        .catch(error => console.log(error))
-    }
   }
 
   // Sort the songs based on the column header that is clicked
@@ -277,7 +327,7 @@ class Main extends Component {
   // Clears the playlist of all songs
   replacePlaylistSongs () {
     axios.put('http://localhost:5000/playlist/replace',
-      {access_token: this.props.user,
+      {access_token: this.props.userToken,
       playlist_id: this.props.playlistId,
       songs: []})
         .then(() => console.log("Emtptied"))
@@ -288,7 +338,7 @@ class Main extends Component {
   addToPlaylist(offset) {
     if (this.state.playlistItemUris.length - offset <= 100) {
       axios.post('http://localhost:5000/playlist/add',
-      {access_token: this.props.user,
+      {access_token: this.props.userToken,
       playlist_id: this.props.playlistId,
       songs: this.state.playlistItemUris.slice(offset) })
         .then(() => this.props.updatePlaylists(false))
@@ -296,7 +346,7 @@ class Main extends Component {
     }
     else {
       axios.post('http://localhost:5000/playlist/add',
-      {access_token: this.props.user,
+      {access_token: this.props.userToken,
       playlist_id: this.props.playlistId,
       songs: this.state.playlistItemUris.slice(offset, offset + 100) })
         .then(() => this.addToPlaylist(offset + 100))
@@ -352,7 +402,19 @@ class Main extends Component {
       hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2) + timeOfDay
     )
   }
-// this.props.playlistId == "Liked Songs" || this.state.userInfo.owner.id != this.props.userId || !(this.state.userInfo.collaborative
+
+  // Display the edit info modal.
+  showEditModal = type => {
+    this.setState({
+      showModal: true,
+      modalInfo: {
+        ...this.props.selectedPlaylistInfo,
+        modalType: type,
+        userId: this.props.userId
+      }
+    })
+  }
+
   render() {
     const { classes } = this.props;
 
@@ -366,7 +428,70 @@ class Main extends Component {
     else {
       return (
         <Paper square className={classes.paper}>
+          <PlaylistModel
+            open={this.state.showModal}
+            closeModal={() => this.setState({ showModal: false })}
+            accessToken={this.props.userToken}
+            modalInfo={this.state.modalInfo}
+            updatePlaylists={this.props.updatePlaylists}
+
+          />
           <TableContainer classes={{root: classes.rootTableContainer}}>
+            {
+              this.props.playlistId == "Liked Songs" ?
+                <Paper square className={classes.infoPaper}>
+                  <div className={classes.likedSongsImage}>
+                    <FavoriteIcon className={classes.heartIcon}/>
+                  </div>
+                  <div>
+                    <Typography variant="h3" className={classes.playlistInfo}>
+                      Liked Songs
+                    </Typography>
+                    <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
+                      Name
+                      <FiberManualRecordIcon classes={{root: classes.dot}}/>
+                      {this.state.playlistItems.length} Songs
+                    </Typography>
+                  </div>
+                </Paper>
+              :
+              <Paper square className={classes.infoPaper}>
+                {this.props.selectedPlaylistInfo.images ?
+                  <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist Image" className={classes.playlistImage}/>
+                  :
+                  <div/>
+                }
+                <div>
+                  <Typography variant="caption" display="block" gutterBottom className={classes.infoPC}>
+                    {this.props.selectedPlaylistInfo.editable ?
+                      <div>
+                        {this.props.selectedPlaylistInfo.public ? "PUBLIC" : "PRIVATE"}
+                        {this.props.selectedPlaylistInfo.collaborative ? <FiberManualRecordIcon className={classes.dotPC}/> : ""}
+                      </div>
+                    :
+                      <div/>}
+                    {this.props.selectedPlaylistInfo.collaborative ? "COLLABORATIVE" : ""}
+                  </Typography>
+                  <Typography variant="h3" className={classes.playlistInfo}>
+                    {this.props.selectedPlaylistInfo.editable ?
+                      <div onClick={() => this.showEditModal("EditInfo")} className={classes.playlistTitle}>
+                        {this.props.selectedPlaylistInfo.name}
+                      </div>
+                    :
+                      this.props.selectedPlaylistInfo.name}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    {this.props.selectedPlaylistInfo.description}
+                  </Typography>
+                  <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
+                    {this.props.selectedPlaylistInfo.owner.display_name}
+                    <FiberManualRecordIcon classes={{root: classes.dot}}/>
+                    {this.state.playlistItems.length} Songs
+                  </Typography>
+                </div>
+              </Paper>
+            }
+
             <Table
               stickyHeader
               size='medium'
@@ -389,7 +514,7 @@ class Main extends Component {
                       sortDirection={this.state.orderBy === headCell.id ? this.state.order : false}
                       classes={{stickyHeader: classes.headerColor}}
                     >
-                      {(this.props.playlistId != "Liked Songs" || this.state.userInfo.collaborative || this.state.userInfo.owner.id == this.props.userId) ?
+                      {this.props.selectedPlaylistInfo.editable ?
                           <TableSortLabel
                             active={this.state.orderBy === headCell.id}
                             direction={this.state.orderBy === headCell.id ? this.state.order : 'asc'}

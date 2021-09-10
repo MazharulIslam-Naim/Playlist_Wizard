@@ -33,7 +33,7 @@ router.route('/info').get((req, res) => {
     url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id,
     headers: {Authorization: 'Bearer '+ req.query.access_token},
     params: {
-      fields: "collaborative, owner.id"
+      fields: "collaborative, description, images, name, owner(display_name, id)"
     },
   })
     .then(response => res.json(response.data))
@@ -77,12 +77,17 @@ router.route('/delete').delete((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 });
 
-// Rename a Playlist
+// Edit a playlist's information
 // Params:
 // - access_token
 // - playlist_id
 // - name
-router.route('/rename').put((req, res) => {
+router.route('/edit').put((req, res) => {
+  const data = {}
+  if (req.body.description) { data.description = req.body.description }
+  data.name = req.body.name
+  data.public = req.body.public
+  data.collaborative = req.body.collaborative
   axios({
     method: 'put',
     url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id,
@@ -90,11 +95,9 @@ router.route('/rename').put((req, res) => {
       Authorization: 'Bearer '+ req.body.access_token,
       'Content-Type': 'application/json'
     },
-    data: {
-      name: req.body.name
-    },
+    data: data
   })
-    .then(() => res.json('Playlist renamed'))
+    .then(() => res.json('Playlist info edited.'))
     .catch(err => res.status(400).json('Error: ' + err))
 });
 

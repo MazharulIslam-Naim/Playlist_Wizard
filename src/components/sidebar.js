@@ -61,28 +61,37 @@ class Sidebar extends Component {
       showModal: false,
       showMenu: false,
       menuPos: {xPos: 0, yPos: 0},
-      modal: {},
-      selectedPlaylist: ''
+      modalInfo: {},
+      selectedPlaylist: '',
+      editable: false
     }
   }
 
+  // If the selected playlist changes then update the selected playlist.
   componentDidUpdate(prevProps) {
     if (this.props.selectedPlaylist !== prevProps.selectedPlaylist) {
       this.setState({ selectedPlaylist: this.props.selectedPlaylist })
     }
   }
 
-  showContextMenu = (e, playlistId, playlistName) => {
+  // Show the right-click menu drop-down.
+  showContextMenu = (e, playlistInfo) => {
     e.preventDefault()
-    this.setState({ showMenu: true, menuPos: {xPos: e.clientX, yPos: e.clientY}, modal: {playlistId: playlistId, name: playlistName} })
+    this.setState({
+      showMenu: true,
+      menuPos: {xPos: e.clientX, yPos: e.clientY},
+      modalInfo: playlistInfo == "Liked Songs" ? {name: "Liked Songs"} : playlistInfo,
+      editable: playlistInfo != "Liked Songs" &&  playlistInfo.owner.id == this.props.userId
+    })
   }
 
+  // Selects the menu item from the right-click drop-down, closes the drop-down, and opens the corresponding modal.
   menuItemClick = type => {
     this.setState({
       showModal: true,
       showMenu: false,
       menuPos: {xPos: 0, yPos: 0},
-      modal: {type: type, name: this.state.modal.name, playlistId: this.state.modal.playlistId, userId: this.props.userId}
+      modalInfo: {...this.state.modalInfo, modalType: type, userId: this.props.userId}
     })
   }
 
@@ -95,7 +104,7 @@ class Sidebar extends Component {
           open={this.state.showModal}
           closeModal={() => this.setState({ showModal: false })}
           accessToken={this.props.userToken}
-          modalType={this.state.modal}
+          modalInfo={this.state.modalInfo}
           updatePlaylists={this.props.updatePlaylists}
         />
         <Fab
@@ -104,7 +113,7 @@ class Sidebar extends Component {
           onClick={() => {
             this.setState({
               showModal: true,
-              modal: {type: "new", name: "New Playlist", userId: this.props.userId}
+              modalInfo: {modalType: "New", name: "New Playlist", userId: this.props.userId}
             })
           }}
         >
@@ -119,7 +128,7 @@ class Sidebar extends Component {
               this.props.onSelectPlaylist("Liked Songs")
               this.setState({ selectedPlaylist: "Liked Songs" })
             }}
-            onContextMenu={ev => this.showContextMenu(ev, "Liked Songs", "Liked Songs")}
+            onContextMenu={ev => this.showContextMenu(ev, "Liked Songs")}
             classes={{root: classes.playlistButton, button: classes.button, selected: classes.selected}}
           >
             <ListItemAvatar>
@@ -142,7 +151,7 @@ class Sidebar extends Component {
                   this.props.onSelectPlaylist(playlist.id)
                   this.setState({ selectedPlaylist: playlist.id })
                 }}
-                onContextMenu={ev => this.showContextMenu(ev, playlist.id, playlist.name)}
+                onContextMenu={ev => this.showContextMenu(ev, playlist)}
                 classes={{root: classes.playlistButton, button: classes.button, selected: classes.selected}}
               >
                 {playlist.images.length != 0 ?
@@ -164,13 +173,13 @@ class Sidebar extends Component {
           </div>
           <Menu
             open={this.state.showMenu}
-            onClose={() => this.setState({ showMenu: false, menuPos: {xPos: 0, yPos: 0}, modal: {} })}
+            onClose={() => this.setState({ showMenu: false, menuPos: {xPos: 0, yPos: 0}, modalInfo: {} })}
             anchorReference="anchorPosition"
             anchorPosition={{ top: this.state.menuPos.yPos, left: this.state.menuPos.xPos }}
           >
             <MenuItem onClick={() => this.menuItemClick("Duplicate")}>Duplicate</MenuItem>
-            {this.state.modal.playlistId != "Liked Songs" ? <MenuItem onClick={() => this.menuItemClick("Rename")}>Rename</MenuItem> : <div/>}
-            {this.state.modal.playlistId != "Liked Songs" ? <MenuItem onClick={() => this.menuItemClick("Delete")}>Delete</MenuItem> : <div/>}
+            {this.state.editable ? <MenuItem onClick={() => this.menuItemClick("EditInfo")}>Edit Info</MenuItem> : <div/> }
+            {this.state.modalInfo.owner ? <MenuItem onClick={() => this.menuItemClick("Delete")}>Delete</MenuItem> : <div/>}
           </Menu>
         </List>
 

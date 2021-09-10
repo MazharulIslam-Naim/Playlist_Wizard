@@ -16,6 +16,7 @@ export default class User extends Component {
       playlists: [],
       user: {},
       selectedPlaylist: '',
+      selectedPlaylistInfo: {}
     }
   }
 
@@ -28,6 +29,7 @@ export default class User extends Component {
     this.getPlaylists(0, true)
   }
 
+  // Unmounts refresh token timer function
   componentWillUnmount() {
     if (this.timerHandle) {
       clearTimeout(this.timerHandle)
@@ -78,7 +80,7 @@ export default class User extends Component {
     }
   }
 
-  // Request the playlist of the current user.
+  // Request all the playlists of the current user.
   getPlaylists(offset, changeToFirst) {
     axios.get('http://localhost:5000/playlist/', {params: {access_token: this.state.user.access_token, offset: offset}})
       .then(res => {
@@ -93,6 +95,7 @@ export default class User extends Component {
           if (changeToFirst) {
             this.selectPlaylist(res.data.items[0].id)
           }
+          else { this.setSelectedPlaylistInfo(this.state.selectedPlaylist) }
         }
         else {
           this.selectPlaylist("Liked Songs")
@@ -102,7 +105,21 @@ export default class User extends Component {
   }
 
   // Select the playlist.
-  selectPlaylist = playlistId => this.setState({ selectedPlaylist: playlistId })
+  selectPlaylist = playlistId => {
+    this.setState({ selectedPlaylist: playlistId })
+    this.setSelectedPlaylistInfo(playlistId)
+  }
+
+  // When the selected playlist changes, change to the info of the selected playlist. 
+  setSelectedPlaylistInfo(playlistId) {
+    if (playlistId && playlistId != "Liked Songs") {
+      var result = this.state.playlists.filter(obj => {
+        return obj.id === playlistId
+      })
+      result[0].editable = result[0].owner.id == this.state.user.id
+      this.setState({ selectedPlaylistInfo: result[0] })
+    }
+  }
 
   // Refresh the list of playlists.
   updatePlaylists = changeToFirst => {
@@ -134,9 +151,10 @@ export default class User extends Component {
           updatePlaylists={this.updatePlaylists}
         />
         <Main
-          user={this.state.user.access_token}
+          userToken={this.state.user.access_token}
           userId={this.state.user.id}
           playlistId={this.state.selectedPlaylist}
+          selectedPlaylistInfo={this.state.selectedPlaylistInfo}
           updatePlaylists={this.updatePlaylists}
         />
       </div>
