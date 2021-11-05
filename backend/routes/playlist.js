@@ -11,7 +11,7 @@ router.route('/').get((req, res) => {
   axios({
     method: 'get',
     url: 'https://api.spotify.com/v1/me/playlists',
-    headers: {Authorization: 'Bearer '+ req.query.access_token},
+    headers: {Authorization: 'Bearer ' + req.query.access_token},
     params: {
       limit: 50,
       offset: req.query.offset
@@ -51,7 +51,7 @@ router.route('/new').post((req, res) => {
     method: 'post',
     url: 'https://api.spotify.com/v1/users/' + req.body.user_id + '/playlists',
     headers: {
-      Authorization: 'Bearer '+ req.body.access_token,
+      Authorization: 'Bearer ' + req.body.access_token,
     },
     data: {
       name: req.body.name
@@ -70,7 +70,7 @@ router.route('/delete').delete((req, res) => {
     method: 'delete',
     url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id + '/followers',
     headers: {
-      Authorization: 'Bearer '+ req.query.access_token,
+      Authorization: 'Bearer ' + req.query.access_token,
     },
   })
     .then(() => res.json('Playlist deleted.'))
@@ -92,7 +92,7 @@ router.route('/edit').put((req, res) => {
     method: 'put',
     url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id,
     headers: {
-      Authorization: 'Bearer '+ req.body.access_token,
+      Authorization: 'Bearer ' + req.body.access_token,
       'Content-Type': 'application/json'
     },
     data: data
@@ -112,7 +112,7 @@ router.route('/saved_items').get((req, res) => {
     method: 'get',
     url: 'https://api.spotify.com/v1/me/tracks',
     headers: {
-      Authorization: 'Bearer '+ req.query.access_token,
+      Authorization: 'Bearer ' + req.query.access_token,
     },
     params: {
       limit: 50,
@@ -123,22 +123,21 @@ router.route('/saved_items').get((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 });
 
-// Not Used Yet
 // Delete the songs saved in the user's saved songs. (max 50)
+// Params:
+// - access_token
+// - songs: array of songs to be deleted from the users saved songs
 router.route('/saved_items').delete((req, res) => {
   axios({
     method: 'delete',
     url: 'https://api.spotify.com/v1/me/tracks',
-    headers: {
-      Authorization: 'Bearer '+ req.query.access_token,
-    },
-    data: {
-      uris: req.body.songs
-    },
+    headers: {Authorization: 'Bearer ' + req.query.access_token},
+    params: {ids: req.query.songs.toString()},
   })
     .then(response => res.json(response.data))
     .catch(err => res.status(400).json('Error: ' + err))
 });
+
 
 // Not Used Yet
 // Add to the user's saved songs. (max 50)
@@ -147,7 +146,7 @@ router.route('/saved_items').put((req, res) => {
     method: 'put',
     url: 'https://api.spotify.com/v1/me/tracks',
     headers: {
-      Authorization: 'Bearer '+ req.query.access_token,
+      Authorization: 'Bearer ' + req.query.access_token,
     },
     data: {
       uris: req.body.songs
@@ -169,7 +168,7 @@ router.route('/playlist_items').get((req, res) => {
   axios({
     method: 'get',
     url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id + '/tracks',
-    headers: {Authorization: 'Bearer '+ req.query.access_token},
+    headers: {Authorization: 'Bearer ' + req.query.access_token},
     params: {
       limit: 100,
       offset: req.query.offset
@@ -189,7 +188,7 @@ router.route('/add').post((req, res) => {
     method: 'post',
     url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id + '/tracks',
     headers: {
-      Authorization: 'Bearer '+ req.body.access_token,
+      Authorization: 'Bearer ' + req.body.access_token,
       'Content-Type': 'application/json'
     },
     data: {
@@ -209,7 +208,7 @@ router.route('/replace').put((req, res) => {
   axios({
     method: 'put',
     url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id + '/tracks',
-    headers: {Authorization: 'Bearer '+ req.body.access_token},
+    headers: {Authorization: 'Bearer ' + req.body.access_token},
     data: {
       uris: req.body.songs
     },
@@ -218,19 +217,21 @@ router.route('/replace').put((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 });
 
-
-// Not Used Yet
 // Remove Items from a Playlist
+// Params:
+// - access_token
+// - playlist_id
+// - songs: array of songs to be deleted from the playlist
 router.route('/playlist_items').delete((req, res) => {
   axios({
     method: 'delete',
-    url: 'https://api.spotify.com/v1/playlists/' + req.body.playlist_id + '/tracks',
+    url: 'https://api.spotify.com/v1/playlists/' + req.query.playlist_id + '/tracks',
     headers: {
-      Authorization: 'Bearer '+ req.body.access_token,
+      Authorization: 'Bearer ' + req.query.access_token,
       'Content-Type': 'application/json'
     },
     data: {
-      uris: req.body.songs
+      uris: req.query.songs
     },
   })
     .then(() => res.json('Songs removed from playlist.'))

@@ -3,21 +3,26 @@ import axios from 'axios';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import Paper from '@material-ui/core/Paper';
-import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import Avatar from '@material-ui/core/Avatar';
+import Checkbox from '@material-ui/core/Checkbox';
+import DeleteIcon from '@material-ui/icons/Delete';
+import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
+import Divider from '@material-ui/core/Divider';
 import FavoriteIcon from '@material-ui/icons/Favorite';
+import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import IconButton from '@material-ui/core/IconButton';
+import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
-import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Toolbar from '@material-ui/core/Toolbar';
+import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
-import Checkbox from '@material-ui/core/Checkbox';
-import Avatar from '@material-ui/core/Avatar';
 
 import PlaylistModel from './modal';
 
@@ -26,6 +31,9 @@ const styles = theme => ({
     backgroundColor: "transparent",
     marginLeft: "180px",
     height: "100vh"
+  },
+  rootTableContainer: {
+    height: "100%"
   },
   noSongs: {
     backgroundColor: "transparent",
@@ -76,6 +84,15 @@ const styles = theme => ({
     fill: "#1db954"
   },
   playlistTitle: {
+    fontWeight: "bold",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    width: "1000px"
+  },
+  playlistClickTitle: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
     "&:hover": {
       cursor: "pointer"
     }
@@ -86,15 +103,38 @@ const styles = theme => ({
     height: "0.5em",
     margin: "0px 5px"
   },
-  rootTableContainer: {
-    height: "100%"
+  toolBar: {
+    color: "white",
+    backgroundColor: "#16191d",
+    width: "100%",
+    height: "60px"
+  },
+  divider: {
+    margin: "0px 20px 5px",
+    backgroundColor: "rgba(255, 255, 255, 0.35)"
+  },
+  tools: {
+    display: "flex",
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  toolBarButton: {
+    marginLeft: "5px",
+    color: "white",
+    "&:hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.08)"
+    },
+  },
+  horizantalDivider: {
+    backgroundColor: "white",
+    height: "24px",
+    margin: "12px 11px 0px 16px"
   },
   headerColor: {
     backgroundColor: "#21252b",
     color: "white",
     borderBottom: "1px solid rgba(255, 255, 255, 0.25)"
   },
-
   rootSortLabel: {
     "&:focus": {
       color: "white"
@@ -118,7 +158,6 @@ const styles = theme => ({
   icon: {
     color: "white",
   },
-
   rootTableRow: {
     "&$hover:hover": {
       backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -135,12 +174,10 @@ const styles = theme => ({
   selected: {
     backgroundColor: "rgba(0, 0, 0, 0.35)",
   },
-
   tableCell: {
     color: "white",
     borderBottom: "1px solid rgba(255, 255, 255, 0.05)"
   },
-
   colorSecondaryCheckbox: {
     "&:hover": {
       backgroundColor: "#d5d5d5",
@@ -153,7 +190,6 @@ const styles = theme => ({
     },
   },
   checked: {
-
   },
   titleCell: {
     display: "flex",
@@ -186,19 +222,21 @@ class Main extends Component {
       checked: [],
       showModal: false,
       modalInfo: {},
+      update: false
     }
   }
 
   // If the playlist seleceted changes then update
   componentDidUpdate(prevProps) {
-    if (this.props.playlistId !== prevProps.playlistId) {
+    if (this.props.playlistId !== prevProps.playlistId || this.state.update == true) {
       this.setState({
         playlistItems: [],
         orderBy: 'Id',
         order: 'asc',
         checked: [],
         showModal: false,
-        modalInfo: {}
+        modalInfo: {},
+        update: false
       })
       if (this.props.playlistId == "Liked Songs") {
         this.getSavedItems(0)
@@ -271,7 +309,6 @@ class Main extends Component {
                     continue
                   }
                   return a.track.artists[i].name.localeCompare(b.track.artists[i].name)
-                  console.log("hello")
                 }
               }
               return a.track.artists.length - b.track.artists.length
@@ -358,24 +395,20 @@ class Main extends Component {
   handleSelectAllClick = (event) => {
     this.setState({ checked: [] })
     if (event.target.checked) {
-      this.state.playlistItems.forEach((item, i) => {
-        this.setState(previousState => ({
-            checked: [...previousState.checked, item.track.uri]
-        }))
-      })
+      this.setState({ checked: this.state.playlistItems })
     }
   }
 
   // Function to see if a song is selected or not
-  isSelected = (uri) => this.state.checked.indexOf(uri) !== -1
+  isSelected = (uri) => this.state.checked.findIndex(selected => selected.track.uri == uri)
 
   // Handle clicking on one of the songs
-  handleClick = (event, uri) => {
-    const checkedIndex = this.state.checked.indexOf(uri);
+  handleClick = (event, song) => {
+    const checkedIndex = this.isSelected(song.track.uri)
     let newChecked = [];
 
     if (checkedIndex === -1) {
-      newChecked = newChecked.concat(this.state.checked, uri);
+      newChecked = newChecked.concat(this.state.checked, song);
     } else if (checkedIndex === 0) {
       newChecked = newChecked.concat(this.state.checked.slice(1));
     } else if (checkedIndex === this.state.checked.length - 1) {
@@ -388,7 +421,7 @@ class Main extends Component {
     }
 
     this.setState({ checked: newChecked })
-  };
+  }
 
   // Read spotify's timestamp in to string.
   timestampToString(timestamp) {
@@ -404,15 +437,39 @@ class Main extends Component {
   }
 
   // Display the edit info modal.
-  showEditModal = type => {
-    this.setState({
-      showModal: true,
-      modalInfo: {
-        ...this.props.selectedPlaylistInfo,
-        modalType: type,
-        userId: this.props.userId
-      }
-    })
+  openModal = type => {
+    if (type == "DeleteSongs") {
+      this.setState({
+        showModal: true,
+        modalInfo: {
+          ...this.props.selectedPlaylistInfo,
+          songs: this.state.checked,
+          modalType: type,
+          userId: this.props.userId
+        }
+      })
+    }
+    else if (this.props.playlistId == "Liked Songs" && type == "Delete") {
+      this.setState({
+        showModal: true,
+        modalInfo: {
+          ...this.props.selectedPlaylistInfo,
+          songs: this.state.playlistItems,
+          modalType: type,
+          userId: this.props.userId
+        }
+      })
+    }
+    else {
+      this.setState({
+        showModal: true,
+        modalInfo: {
+          ...this.props.selectedPlaylistInfo,
+          modalType: type,
+          userId: this.props.userId
+        }
+      })
+    }
   }
 
   render() {
@@ -430,15 +487,14 @@ class Main extends Component {
         <Paper square className={classes.paper}>
           <PlaylistModel
             open={this.state.showModal}
-            closeModal={() => this.setState({ showModal: false })}
+            closeModal={() => this.setState({ showModal: false, modalInfo: {} })}
             accessToken={this.props.userToken}
             modalInfo={this.state.modalInfo}
             updatePlaylists={this.props.updatePlaylists}
-
+            updatePlaylistSongs={() => this.setState({ update: true })}
           />
           <TableContainer classes={{root: classes.rootTableContainer}}>
-            {
-              this.props.playlistId == "Liked Songs" ?
+            {this.props.playlistId == "Liked Songs" ?
                 <Paper square className={classes.infoPaper}>
                   <div className={classes.likedSongsImage}>
                     <FavoriteIcon className={classes.heartIcon}/>
@@ -448,7 +504,7 @@ class Main extends Component {
                       Liked Songs
                     </Typography>
                     <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
-                      Name
+                      {this.props.displayName}
                       <FiberManualRecordIcon classes={{root: classes.dot}}/>
                       {this.state.playlistItems.length} Songs
                     </Typography>
@@ -456,7 +512,7 @@ class Main extends Component {
                 </Paper>
               :
               <Paper square className={classes.infoPaper}>
-                {this.props.selectedPlaylistInfo.images ?
+                {this.props.selectedPlaylistInfo.images.length != 0 ?
                   <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist Image" className={classes.playlistImage}/>
                   :
                   <div/>
@@ -472,11 +528,13 @@ class Main extends Component {
                       <div/>}
                     {this.props.selectedPlaylistInfo.collaborative ? "COLLABORATIVE" : ""}
                   </Typography>
-                  <Typography variant="h3" className={classes.playlistInfo}>
+                  <Typography variant="h3" className={classes.playlistTitle}>
                     {this.props.selectedPlaylistInfo.editable ?
-                      <div onClick={() => this.showEditModal("EditInfo")} className={classes.playlistTitle}>
-                        {this.props.selectedPlaylistInfo.name}
-                      </div>
+                      <Tooltip title="Edit Playlist Info">
+                        <div onClick={() => this.openModal("EditInfo")} className={classes.playlistClickTitle}>
+                          {this.props.selectedPlaylistInfo.name}
+                        </div>
+                      </Tooltip>
                     :
                       this.props.selectedPlaylistInfo.name}
                   </Typography>
@@ -492,10 +550,35 @@ class Main extends Component {
               </Paper>
             }
 
-            <Table
-              stickyHeader
-              size='medium'
-            >
+            <Paper className={classes.toolBar}>
+              <Divider className={classes.divider}/>
+              <div className={classes.tools}>
+                <Tooltip title="Delete Playlist">
+                  <IconButton aria-label="delete" onClick={() => this.openModal("Delete")} className={classes.toolBarButton}>
+                    <DeleteIcon/>
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Duplicate Playlist">
+                  <IconButton aria-label="Duplicate" onClick={() => this.openModal("Duplicate")} className={classes.toolBarButton}>
+                    <FileCopyIcon/>
+                  </IconButton>
+                </Tooltip>
+                {(this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs") && this.state.checked.length ?
+                  <div className={classes.tools}>
+                    <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
+                    <Tooltip title="Delete Songs">
+                      <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
+                        <DeleteSweepIcon/>
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                :
+                  <div/>
+                }
+              </div>
+            </Paper>
+
+            <Table stickyHeader size='medium'>
               <TableHead>
                 <TableRow>
                   <TableCell padding="checkbox" classes={{stickyHeader: classes.headerColor}}>
@@ -533,48 +616,46 @@ class Main extends Component {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {
-                  this.state.playlistItems.map((row, index) => {
-                    return (
-                      <TableRow
-                        hover
-                        role="checkbox"
-                        key={row.track.id}
-                        selected={this.isSelected(row.track.uri)}
-                        onClick={event => this.handleClick(event, row.track.uri)}
-                        classes={{root: classes.rootTableRow, hover: classes.hover, selected: classes.selected}}
-                      >
-                        <TableCell padding="checkbox" className={classes.tableCell}>
-                          <Checkbox
-                            checked={this.isSelected(row.track.uri)}
-                            classes={{root: classes.icon, colorSecondary: classes.colorSecondaryCheckbox, checked: classes.checked}}
-                          />
-                        </TableCell>
-                        <TableCell align="right" className={classes.tableCell}>{index+1}</TableCell>
-                        <TableCell classes={{root: classes.titleCell}} className={classes.tableCell}>
-                          <Avatar variant='square' alt={row.track.album.name} src={row.track.album.images[row.track.album.images.length - 1].url} />
-                          <div className={classes.songTitle}>
-                            {row.track.name}
-                          </div>
-                        </TableCell>
-                        <TableCell className={classes.tableCell}>{row.track.album.name}</TableCell>
-                        <TableCell className={classes.tableCell}>
-                          {
-                            row.track.artists.map(artist => {
-                              return (
-                                artist.name
-                              )
-                            }).join(", ")
-                          }
-                        </TableCell>
-                        <TableCell align="right" className={classes.tableCell}>
-                          {Math.floor(row.track.duration_ms / 60000) + ":" + ("0" + Math.floor((row.track.duration_ms % 60000) / 1000)).substr(-2)}
-                        </TableCell>
-                        <TableCell className={classes.tableCell}>{this.timestampToString(row.added_at)}</TableCell>
-                      </TableRow>
-                    )
-                  })
-                }
+                {this.state.playlistItems.map((row, index) => {
+                  return (
+                    <TableRow
+                      hover
+                      role="checkbox"
+                      key={row.track.id}
+                      selected={this.isSelected(row.track.uri) != -1}
+                      onClick={event => this.handleClick(event, row)}
+                      classes={{root: classes.rootTableRow, hover: classes.hover, selected: classes.selected}}
+                    >
+                      <TableCell padding="checkbox" className={classes.tableCell}>
+                        <Checkbox
+                          checked={this.isSelected(row.track.uri) != -1}
+                          classes={{root: classes.icon, colorSecondary: classes.colorSecondaryCheckbox, checked: classes.checked}}
+                        />
+                      </TableCell>
+                      <TableCell align="right" className={classes.tableCell}>{index+1}</TableCell>
+                      <TableCell classes={{root: classes.titleCell}} className={classes.tableCell}>
+                        <Avatar variant='square' alt={row.track.album.name} src={row.track.album.images[row.track.album.images.length - 1].url} />
+                        <div className={classes.songTitle}>
+                          {row.track.name}
+                        </div>
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>{row.track.album.name}</TableCell>
+                      <TableCell className={classes.tableCell}>
+                        {
+                          row.track.artists.map(artist => {
+                            return (
+                              artist.name
+                            )
+                          }).join(", ")
+                        }
+                      </TableCell>
+                      <TableCell align="right" className={classes.tableCell}>
+                        {Math.floor(row.track.duration_ms / 60000) + ":" + ("0" + Math.floor((row.track.duration_ms % 60000) / 1000)).substr(-2)}
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>{this.timestampToString(row.added_at)}</TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </TableContainer>

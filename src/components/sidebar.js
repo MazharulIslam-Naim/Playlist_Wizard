@@ -15,6 +15,7 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
+import Tooltip from '@material-ui/core/Tooltip';
 
 import PlaylistModel from './modal';
 
@@ -80,7 +81,10 @@ class Sidebar extends Component {
     this.setState({
       showMenu: true,
       menuPos: {xPos: e.clientX, yPos: e.clientY},
-      modalInfo: playlistInfo == "Liked Songs" ? {name: "Liked Songs"} : playlistInfo,
+      modalInfo: playlistInfo == "Liked Songs" ?
+        {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false}
+      :
+        playlistInfo,
       editable: playlistInfo != "Liked Songs" &&  playlistInfo.owner.id == this.props.userId
     })
   }
@@ -107,18 +111,20 @@ class Sidebar extends Component {
           modalInfo={this.state.modalInfo}
           updatePlaylists={this.props.updatePlaylists}
         />
-        <Fab
-          className={classes.addPlaylistButton}
-          variant="extended"
-          onClick={() => {
-            this.setState({
-              showModal: true,
-              modalInfo: {modalType: "New", name: "New Playlist", userId: this.props.userId}
-            })
-          }}
-        >
-          <AddIcon />
-        </Fab>
+        <Tooltip title="New Playlist">
+          <Fab
+            className={classes.addPlaylistButton}
+            variant="extended"
+            onClick={() => {
+              this.setState({
+                showModal: true,
+                modalInfo: {modalType: "New", name: "New Playlist", userId: this.props.userId}
+              })
+            }}
+          >
+            <AddIcon />
+          </Fab>
+         </Tooltip>
         <List>
           <ListItem
             button

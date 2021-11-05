@@ -27,6 +27,7 @@ router.route('/:email').get((req, res) => {
 // - expire_time: one minute less then the cuurent time plus expires_in
 router.route('/add').post((req, res) => {
   const id = req.body.id;
+  const display_name = req.body.display_name;
   const email = req.body.email;
   const access_token = req.body.access_token;
   const expires_in = Number(req.body.expires_in);
@@ -35,6 +36,7 @@ router.route('/add').post((req, res) => {
 
   const newUser = new User({
     id,
+    display_name,
     email,
     access_token,
     expires_in,
@@ -59,6 +61,7 @@ router.route('/update').post((req, res) => {
   User.findOne({ email: req.body.email })
     .then(user => {
       user.id = req.body.id;
+      user.display_name = req.body.display_name;
       user.email = req.body.email;
       user.access_token = req.body.access_token;
       user.expires_in = Number(req.body.expires_in);

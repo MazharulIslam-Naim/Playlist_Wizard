@@ -15,7 +15,8 @@ export default class Loading extends Component {
       redirect: '',
       authToken: {},
       id: '',
-      email: ''
+      email: '',
+      display_name: ''
     }
   }
 
@@ -43,7 +44,7 @@ export default class Loading extends Component {
   getUser() {
     axios.get('http://localhost:5000/authorize/user', {params: {access_token: this.state.authToken.access_token}})
       .then(res => {
-        this.setState({ email: res.data.email, id: res.data.id })
+        this.setState({ email: res.data.email, id: res.data.id, display_name: res.data.display_name })
         this.userFind()
       })
       .catch(error => console.log(error))
@@ -70,6 +71,7 @@ export default class Loading extends Component {
     dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 )
     const user = {
       id: this.state.id,
+      display_name: this.state.display_name,
       email: this.state.email,
       access_token: this.state.authToken.access_token,
       expires_in: this.state.authToken.expires_in,
@@ -91,6 +93,7 @@ export default class Loading extends Component {
     dt.setSeconds( dt.getSeconds() + this.state.authToken.expires_in - 60 )
     const user = {
       id: this.state.id,
+      display_name: this.state.display_name,
       email: this.state.email,
       access_token: this.state.authToken.access_token,
       expires_in: this.state.authToken.expires_in,

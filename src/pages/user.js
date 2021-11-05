@@ -61,6 +61,7 @@ export default class User extends Component {
           currTime.setSeconds( currTime.getSeconds() + res.data.expires_in - 60 )
           const newToken = {
             id: this.state.user.id,
+            display_name: this.state.user.display_name,
             email: this.state.user.email,
             access_token: res.data.access_token,
             expires_in: res.data.expires_in,
@@ -110,7 +111,7 @@ export default class User extends Component {
     this.setSelectedPlaylistInfo(playlistId)
   }
 
-  // When the selected playlist changes, change to the info of the selected playlist. 
+  // When the selected playlist changes, change to the info of the selected playlist.
   setSelectedPlaylistInfo(playlistId) {
     if (playlistId && playlistId != "Liked Songs") {
       var result = this.state.playlists.filter(obj => {
@@ -118,6 +119,9 @@ export default class User extends Component {
       })
       result[0].editable = result[0].owner.id == this.state.user.id
       this.setState({ selectedPlaylistInfo: result[0] })
+    }
+    else {
+      this.setState({ selectedPlaylistInfo: {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false} })
     }
   }
 
@@ -153,6 +157,7 @@ export default class User extends Component {
         <Main
           userToken={this.state.user.access_token}
           userId={this.state.user.id}
+          displayName={this.state.user.display_name}
           playlistId={this.state.selectedPlaylist}
           selectedPlaylistInfo={this.state.selectedPlaylistInfo}
           updatePlaylists={this.updatePlaylists}
