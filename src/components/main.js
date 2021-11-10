@@ -29,8 +29,10 @@ import PlaylistModel from './modal';
 const styles = theme => ({
   paper: {
     backgroundColor: "transparent",
-    marginLeft: "180px",
-    height: "100vh"
+    width: "90vw",
+    height: "100vh",
+    minWidth: "900px",
+    minHeight: "500px",
   },
   rootTableContainer: {
     height: "100%"
@@ -38,8 +40,11 @@ const styles = theme => ({
   noSongs: {
     backgroundColor: "transparent",
     color: "white",
+    width: "90vw",
     height: "100vh",
-    margin: "0 0 0 180px",
+    minWidth: "900px",
+    minHeight: "500px",
+    margin: "0px",
     display: "flex",
     textAlign: "center",
     justifyContent: "center",
@@ -53,17 +58,18 @@ const styles = theme => ({
     display: "flex",
     alignContent: "center",
     alignItems: "center",
+    padding: "0px 20px 0px"
   },
   playlistImage: {
     height: "150px",
     width: "150px",
-    margin: "0px 30px",
+    marginRight: "30px",
   },
   likedSongsImage: {
     backgroundColor: "#1db954",
     height: "150px",
     width: "150px",
-    margin: "0px 30px",
+    marginRight: "30px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -71,6 +77,9 @@ const styles = theme => ({
   heartIcon: {
     height: "4em",
     width: "4em",
+  },
+  playlistInfoContainer: {
+    width: "calc(100% - 180px)"
   },
   playlistInfo: {
     fontWeight: "bold"
@@ -88,7 +97,7 @@ const styles = theme => ({
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
-    width: "1000px"
+    width: "100%"
   },
   playlistClickTitle: {
     overflow: "hidden",
@@ -96,6 +105,12 @@ const styles = theme => ({
     "&:hover": {
       cursor: "pointer"
     }
+  },
+  playlistDescription: {
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    width: "100%"
   },
   dot: {
     fill: "#1db954",
@@ -517,7 +532,7 @@ class Main extends Component {
                   :
                   <div/>
                 }
-                <div>
+                <div className={classes.playlistInfoContainer}>
                   <Typography variant="caption" display="block" gutterBottom className={classes.infoPC}>
                     {this.props.selectedPlaylistInfo.editable ?
                       <div>
@@ -538,7 +553,7 @@ class Main extends Component {
                     :
                       this.props.selectedPlaylistInfo.name}
                   </Typography>
-                  <Typography variant="body2" gutterBottom>
+                  <Typography variant="body2" gutterBottom className={classes.playlistDescription}>
                     {this.props.selectedPlaylistInfo.description}
                   </Typography>
                   <Typography variant="body1" gutterBottom className={classes.playlistInfo}>

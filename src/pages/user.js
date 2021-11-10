@@ -120,7 +120,7 @@ export default class User extends Component {
       result[0].editable = result[0].owner.id == this.state.user.id
       this.setState({ selectedPlaylistInfo: result[0] })
     }
-    else {
+    else if (playlistId != "Liked Songs") {
       this.setState({ selectedPlaylistInfo: {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false} })
     }
   }
@@ -143,7 +143,8 @@ export default class User extends Component {
       <div
         style={{
           backgroundColor: "#282c34",
-          overflow: "auto"
+          overflow: "auto",
+          display: "flex",
         }}
       >
         <Sidebar

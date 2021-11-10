@@ -6,7 +6,6 @@ import { withStyles } from '@material-ui/core/styles';
 import Avatar from '@material-ui/core/Avatar';
 import AddIcon from '@material-ui/icons/Add';
 import Divider from '@material-ui/core/Divider';
-import Drawer from '@material-ui/core/Drawer';
 import Fab from '@material-ui/core/Fab';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import List from '@material-ui/core/List';
@@ -15,6 +14,7 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
+import Paper from '@material-ui/core/Paper';
 import Tooltip from '@material-ui/core/Tooltip';
 
 import PlaylistModel from './modal';
@@ -23,13 +23,18 @@ const styles = theme => ({
   sidebar: {
     backgroundColor: "transparent",
     color: "white",
-    maxWidth: "180px"
+    width: "10vw",
+    height: "100vh",
+    minWidth: "180px",
+    minHeight: "500px",
+    overflow: "auto"
   },
   addPlaylistButton: {
     backgroundColor: "#1db954",
     color: "white",
     margin: "10px",
-    minHeight: "48px"
+    minHeight: "48px",
+    width: "calc(100% - 20px)"
   },
   playlistButton: {
     '&$selected, &$selected:hover': {
@@ -47,6 +52,11 @@ const styles = theme => ({
     '&:hover': {
       backgroundColor: "rgba(0, 0, 0, 0.35)"
     }
+  },
+  listItemText: {
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis"
   },
   selected: {
     backgroundColor: "rgba(0, 0, 0, 0.35)"
@@ -103,7 +113,7 @@ class Sidebar extends Component {
     const { classes } = this.props;
 
     return (
-      <Drawer variant="permanent" classes={{paper: classes.sidebar}}>
+      <Paper className={classes.sidebar}>
         <PlaylistModel
           open={this.state.showModal}
           closeModal={() => this.setState({ showModal: false })}
@@ -172,7 +182,7 @@ class Sidebar extends Component {
                   </ListItemAvatar>
                 }
 
-                <ListItemText primary={playlist.name} />
+                <ListItemText primary={playlist.name} classes={{primary: classes.listItemText}}/>
               </ListItem>
             ))
           }
@@ -189,7 +199,7 @@ class Sidebar extends Component {
           </Menu>
         </List>
 
-      </Drawer>
+      </Paper>
     )
   }
 }

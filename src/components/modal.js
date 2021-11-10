@@ -120,16 +120,17 @@ class PlaylistModel extends Component {
     if (this.props.modalInfo.name !== prevProps.modalInfo.name ||
         this.props.modalInfo.description !== prevProps.modalInfo.description ||
         this.props.modalInfo.public !== prevProps.modalInfo.public ||
-        this.props.modalInfo.collaborative !== prevProps.modalInfo.collaborative ||
-        this.props.modalInfo.songs !== prevProps.modalInfo.songs
+        this.props.modalInfo.collaborative !== prevProps.modalInfo.collaborative
       ) {
       this.setState({
         name: this.props.modalInfo.name,
         description: this.props.modalInfo.description,
         public: this.props.modalInfo.public,
         collaborative: this.props.modalInfo.collaborative,
-        selected: this.props.modalInfo.songs
        })
+    }
+    if (!(prevProps.modalInfo.songs) && this.props.modalInfo.songs) {
+      this.setState({ selected: this.props.modalInfo.songs })
     }
   }
 
@@ -699,7 +700,7 @@ class PlaylistModel extends Component {
 
   render() {
     const { classes } = this.props;
-
+    
     switch(this.props.modalInfo.modalType) {
       case "New":
         return this.newPLBody()

@@ -20,28 +20,30 @@ export default class Login extends Component {
   render() {
     return (
       <div className="Main">
-        <h1>Playlist Wizard</h1>
-        <p>
-          Organize, view and create Spotify playlists easily!
-          Playlist wizard allows you to create new playlists effortlessly by searching
-          Spotify and picking songs from your own playlists.
-          You can also sort the playlists by song name, album, and date added.
-          The playlist on shuffle with no repeating songs.
-        </p>
-        <p>
-          Login to Spotify to get started!
-        </p>
-        <Button
-          variant="contained"
-          onClick={this.onLogin}
-          style={{
-                backgroundColor: "#1db954",
-                color: "white"
-              }}
-          disableElevation
-        >
-          LOGIN WITH SPOTIFY
-        </Button>
+        <div className="Content">
+          <h1>Playlist Wizard</h1>
+          <p>
+            Organize, view and create Spotify playlists easily!
+            Playlist wizard allows you to create new playlists effortlessly by searching
+            Spotify and picking songs from your own playlists.
+            You can also sort the playlists by song name, album, and date added.
+            The playlist on shuffle with no repeating songs.
+          </p>
+          <p>
+            Login to Spotify to get started!
+          </p>
+          <Button
+            variant="contained"
+            onClick={this.onLogin}
+            style={{
+                  backgroundColor: "#1db954",
+                  color: "white"
+                }}
+            disableElevation
+          >
+            LOGIN WITH SPOTIFY
+          </Button>
+        </div>
       </div>
     )
   }
