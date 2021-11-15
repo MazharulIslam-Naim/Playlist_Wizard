@@ -136,7 +136,7 @@ class PlaylistModel extends Component {
 
   // Request to create a new playlist.
   createPlaylist = () => {
-    axios.post('http://localhost:5000/playlist/new', {access_token: this.props.accessToken, user_id: this.props.modalInfo.userId, name: this.state.name})
+    axios.post('/playlist/new', {access_token: this.props.accessToken, user_id: this.props.modalInfo.userId, name: this.state.name})
       .then(res => {
         this.setState({ newPlaylistId: res.data.id })
         if (this.props.modalInfo.modalType  == "New") {
@@ -164,7 +164,7 @@ class PlaylistModel extends Component {
 
   // Get the current user's saved songs.
   getSavedItems(offset) {
-    axios.get('http://localhost:5000/playlist/saved_items', {params: {access_token: this.props.accessToken, offset: offset} })
+    axios.get('/playlist/saved_items', {params: {access_token: this.props.accessToken, offset: offset} })
       .then(res => {
         res.data.items.forEach((item, i) => {
           this.setState(previousState => ({
@@ -183,7 +183,7 @@ class PlaylistModel extends Component {
 
   // Gets all the songs in the current playlist and saves only the uri of each song.
   getPlaylistItems(offset) {
-    axios.get('http://localhost:5000/playlist/playlist_items',
+    axios.get('/playlist/playlist_items',
       {params: {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id, offset: offset}}
     )
       .then(res => {
@@ -206,7 +206,7 @@ class PlaylistModel extends Component {
   addToPlaylist(offset) {
     if (this.state.playlistItems.length > 0) {
       if (this.state.playlistItems.length - offset <= 100) {
-        axios.post('http://localhost:5000/playlist/add',
+        axios.post('/playlist/add',
         {access_token: this.props.accessToken,
         playlist_id: this.state.newPlaylistId,
         songs: this.state.playlistItems.slice(offset) })
@@ -217,7 +217,7 @@ class PlaylistModel extends Component {
           .catch(error => console.log(error))
       }
       else {
-        axios.post('http://localhost:5000/playlist/add',
+        axios.post('/playlist/add',
         {access_token: this.props.accessToken,
         playlist_id: this.state.newPlaylistId,
         songs: this.state.playlistItems.slice(offset, offset + 100) })
@@ -233,7 +233,7 @@ class PlaylistModel extends Component {
 
   // Request to edit the info of a playlist.
   editInfoPlaylist = () => {
-    axios.put('http://localhost:5000/playlist/edit', {
+    axios.put('/playlist/edit', {
       access_token: this.props.accessToken,
       playlist_id: this.props.modalInfo.modalType  == "EditInfo" ? this.props.modalInfo.id : this.state.newPlaylistId,
       name: this.state.name,
@@ -252,7 +252,7 @@ class PlaylistModel extends Component {
 
   // Request to delete a playlist.
   deletePlaylist = () => {
-    axios.delete('http://localhost:5000/playlist/delete', {params: {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id}})
+    axios.delete('/playlist/delete', {params: {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id}})
       .then(() => {
         this.props.updatePlaylists(true)
         this.props.closeModal()
@@ -297,7 +297,7 @@ class PlaylistModel extends Component {
   deleteSongs(uris, offset) {
     if (uris.length > 0) {
       if (uris.length - offset <= 100) {
-        axios.delete('http://localhost:5000/playlist/playlist_items',
+        axios.delete('/playlist/playlist_items',
         {params: {access_token: this.props.accessToken,
         playlist_id: this.props.modalInfo.id,
         songs: uris.slice(offset) }})
@@ -309,7 +309,7 @@ class PlaylistModel extends Component {
           .catch(error => console.log(error))
       }
       else {
-        axios.delete('http://localhost:5000/playlist/playlist_items',
+        axios.delete('/playlist/playlist_items',
         {params: {access_token: this.props.accessToken,
         playlist_id: this.props.modalInfo.id,
         songs: uris.slice(offset, offset + 100) }})
@@ -327,7 +327,7 @@ class PlaylistModel extends Component {
   deleteSavedSongs(ids, offset) {
     if (ids.length > 0) {
       if (ids.length - offset <= 50) {
-        axios.delete('http://localhost:5000/playlist/saved_items',
+        axios.delete('/playlist/saved_items',
         {params: {access_token: this.props.accessToken,
         songs: ids.slice(offset) }})
           .then(() => {
@@ -337,7 +337,7 @@ class PlaylistModel extends Component {
           .catch(error => console.log(error))
       }
       else {
-        axios.delete('http://localhost:5000/playlist/saved_items',
+        axios.delete('/playlist/saved_items',
         {params: {access_token: this.props.accessToken,
         songs: ids.slice(offset, offset + 50) }})
           .then(() => this.deleteSavedSongs(ids, offset + 50))
@@ -700,7 +700,7 @@ class PlaylistModel extends Component {
 
   render() {
     const { classes } = this.props;
-    
+
     switch(this.props.modalInfo.modalType) {
       case "New":
         return this.newPLBody()

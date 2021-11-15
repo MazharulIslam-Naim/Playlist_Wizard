@@ -28,7 +28,7 @@ export default class Loading extends Component {
       this.setState({ redirect: 'homepage' })
     }
     else {
-      axios.post('http://localhost:5000/authorize/code', {code: urldata.code})
+      axios.post('/authorize/code', {code: urldata.code})
         .then(res => {
           this.setState({ authToken: res.data })
           this.getUser()
@@ -42,7 +42,7 @@ export default class Loading extends Component {
 
   // Get user object from spotify.
   getUser() {
-    axios.get('http://localhost:5000/authorize/user', {params: {access_token: this.state.authToken.access_token}})
+    axios.get('/authorize/user', {params: {access_token: this.state.authToken.access_token}})
       .then(res => {
         this.setState({ email: res.data.email, id: res.data.id, display_name: res.data.display_name })
         this.userFind()
@@ -52,7 +52,7 @@ export default class Loading extends Component {
 
   // Find the user in the database.
   userFind() {
-    axios.get('http://localhost:5000/user/' + this.state.email)
+    axios.get('/user/' + this.state.email)
       .then(res => {
         if (res.data.length == 0) {
           // Create user in database if user doesn't exist.
@@ -79,7 +79,7 @@ export default class Loading extends Component {
       expire_time: dt,
     }
 
-    axios.post('http://localhost:5000/user/add', user)
+    axios.post('/user/add', user)
       .then(res => {
         console.log(res.data)
         this.setState({ redirect: 'user' })
@@ -101,7 +101,7 @@ export default class Loading extends Component {
       expire_time: dt,
     }
 
-    axios.post('http://localhost:5000/user/update', user)
+    axios.post('/user/update', user)
       .then(res => {
         console.log(res.data)
         this.setState({ redirect: 'user' })

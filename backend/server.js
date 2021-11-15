@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 
 require('dotenv').config();
 
@@ -26,6 +27,11 @@ const playlistRouter = require('./routes/playlist');
 app.use('/authorize', authorizeRouter);
 app.use('/user', userRouter);
 app.use('/playlist', playlistRouter);
+
+app.use(express.static(path.join(__dirname, '../build')))
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../build', "index.html"))
+})
 
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);

@@ -265,7 +265,7 @@ class Main extends Component {
 
   // Request to get all the songs of the selected palylist
   getPlaylistItems(offset) {
-    axios.get('http://localhost:5000/playlist/playlist_items', {params: {access_token: this.props.userToken, playlist_id: this.props.playlistId, offset: offset}})
+    axios.get('/playlist/playlist_items', {params: {access_token: this.props.userToken, playlist_id: this.props.playlistId, offset: offset}})
       .then(res => {
         this.setState(previousState => ({
           playlistItems: previousState.playlistItems.concat(res.data.items)
@@ -279,7 +279,7 @@ class Main extends Component {
 
   // Request to get all of the user's saved songs
   getSavedItems(offset) {
-    axios.get('http://localhost:5000/playlist/saved_items', {params: {access_token: this.props.userToken, offset: offset} })
+    axios.get('/playlist/saved_items', {params: {access_token: this.props.userToken, offset: offset} })
       .then(res => {
         this.setState(previousState => ({
           playlistItems: previousState.playlistItems.concat(res.data.items)
@@ -378,7 +378,7 @@ class Main extends Component {
 
   // Clears the playlist of all songs
   replacePlaylistSongs () {
-    axios.put('http://localhost:5000/playlist/replace',
+    axios.put('/playlist/replace',
       {access_token: this.props.userToken,
       playlist_id: this.props.playlistId,
       songs: []})
@@ -389,7 +389,7 @@ class Main extends Component {
   // Request to add all the songs from the ones saved in state to the selected playlist.
   addToPlaylist(offset) {
     if (this.state.playlistItemUris.length - offset <= 100) {
-      axios.post('http://localhost:5000/playlist/add',
+      axios.post('/playlist/add',
       {access_token: this.props.userToken,
       playlist_id: this.props.playlistId,
       songs: this.state.playlistItemUris.slice(offset) })
@@ -397,7 +397,7 @@ class Main extends Component {
         .catch(error => console.log(error))
     }
     else {
-      axios.post('http://localhost:5000/playlist/add',
+      axios.post('/playlist/add',
       {access_token: this.props.userToken,
       playlist_id: this.props.playlistId,
       songs: this.state.playlistItemUris.slice(offset, offset + 100) })

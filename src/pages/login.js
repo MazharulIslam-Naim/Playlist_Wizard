@@ -12,7 +12,7 @@ export default class Login extends Component {
   // Function called when the user clicks to login. Gets the url to redirt to
   // spotify login.
   onLogin = () => {
-    axios.get('http://localhost:5000/authorize')
+    axios.get('/authorize')
       .then(res => window.open(res.data, "_self"))
       .catch(error => console.log(error))
   }

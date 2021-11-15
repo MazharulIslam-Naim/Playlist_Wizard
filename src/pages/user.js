@@ -22,7 +22,7 @@ export default class User extends Component {
 
   // Get the user information of the current user from the database.
   async componentDidMount() {
-    await axios.get('http://localhost:5000/user/' + this.props.location.state.email)
+    await axios.get('/user/' + this.props.location.state.email)
       .then(res => this.setState({ user: res.data[0] }))
       .catch(error => console.log(error))
     this.timeToRefreshToken()
@@ -56,7 +56,7 @@ export default class User extends Component {
     var expireTime = new Date(this.state.user.expire_time)
 
     if (expireTime <= currTime) {
-      axios.post('http://localhost:5000/user/refresh_token/', {refresh_token: this.state.user.refresh_token})
+      axios.post('/user/refresh_token/', {refresh_token: this.state.user.refresh_token})
         .then(res => {
           currTime.setSeconds( currTime.getSeconds() + res.data.expires_in - 60 )
           const newToken = {
@@ -70,7 +70,7 @@ export default class User extends Component {
           }
 
           this.setState({ user: newToken })
-          axios.post('http://localhost:5000/user/update', newToken)
+          axios.post('/user/update', newToken)
             .then(res => {
               console.log(res.data + " " + "Access token refreshed.")
               this.timeToRefreshToken()
@@ -83,7 +83,7 @@ export default class User extends Component {
 
   // Request all the playlists of the current user.
   getPlaylists(offset, changeToFirst) {
-    axios.get('http://localhost:5000/playlist/', {params: {access_token: this.state.user.access_token, offset: offset}})
+    axios.get('/playlist/', {params: {access_token: this.state.user.access_token, offset: offset}})
       .then(res => {
         this.setState(previousState => ({
           playlists: previousState.playlists.concat(res.data.items)
