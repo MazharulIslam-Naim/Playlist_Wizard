@@ -264,35 +264,41 @@ class Main extends Component {
   }
 
   // Request to get all the songs of the selected palylist
-  getPlaylistItems(offset) {
-    axios.get('/playlist/playlist_items', {params: {access_token: this.props.userToken, playlist_id: this.props.playlistId, offset: offset}})
-      .then(res => {
-        this.setState(previousState => ({
-          playlistItems: previousState.playlistItems.concat(res.data.items)
-        }))
-        if (res.data.next) {
-          this.getPlaylistItems(offset + 100)
-        }
-      })
-      .catch(error => console.log(error))
+  async getPlaylistItems(offset) {
+    var next = true
+    var songs = []
+    for (var i = 0; next; i = i + 100) {
+      await axios.get('/playlist/playlist_items', {params: {access_token: this.props.userToken, playlist_id: this.props.playlistId, offset: i}})
+        .then(res => {
+          songs = songs.concat(res.data.items)
+          if (res.data.next == null) {
+            next = false
+          }
+        })
+        .catch(error => console.log(error))
+    }
+    this.setState({ playlistItems: songs })
   }
 
   // Request to get all of the user's saved songs
-  getSavedItems(offset) {
-    axios.get('/playlist/saved_items', {params: {access_token: this.props.userToken, offset: offset} })
-      .then(res => {
-        this.setState(previousState => ({
-          playlistItems: previousState.playlistItems.concat(res.data.items)
-        }))
-        if (res.data.next) {
-          this.getSavedItems(offset + 50)
-        }
-      })
-      .catch(error => console.log(error))
+  async getSavedItems(offset) {
+    var next = true
+    var songs = []
+    for (var i = 0; next; i = i + 50) {
+      await axios.get('/playlist/saved_items', {params: {access_token: this.props.userToken, offset: i} })
+        .then(res => {
+          songs = songs.concat(res.data.items)
+          if (res.data.next == null) {
+            next = false
+          }
+        })
+        .catch(error => console.log(error))
+    }
+    this.setState({ playlistItems: songs })
   }
 
   // Sort the songs based on the column header that is clicked
-  sortSongs = (id) => {
+  sortSongs = id => {
     var newDirection = this.state.orderBy != id ? 'asc' : this.state.order == 'asc' ? 'desc' : 'asc'
     this.setState({ playlistItemUris: [], orderBy: id, order: newDirection })
 
@@ -361,49 +367,34 @@ class Main extends Component {
       this.setState({ playlistItems: this.state.playlistItems.reverse() })
     }
 
-    this.reorderPlaylistItems()
-      .then(() => this.addToPlaylist(0))
+    this.getAllUris()
   }
 
   // Get all the uris of the new sorted list of songs
-  async reorderPlaylistItems () {
+  getAllUris () {
     this.state.playlistItems.forEach((item, i) => {
       this.setState(previousState => ({
           playlistItemUris: [...previousState.playlistItemUris, item.track.uri]
       }))
     })
-    this.replacePlaylistSongs()
-    return "Done"
+    this.clearPlaylistOfSongs()
   }
 
   // Clears the playlist of all songs
-  replacePlaylistSongs () {
-    axios.put('/playlist/replace',
-      {access_token: this.props.userToken,
-      playlist_id: this.props.playlistId,
-      songs: []})
-        .then(() => console.log("Emtptied"))
+  async clearPlaylistOfSongs () {
+    await axios.put('/playlist/replace', {access_token: this.props.userToken, playlist_id: this.props.playlistId, songs: []})
+        .then(() => this.addToPlaylist())
         .catch(error => console.log(error))
   }
 
   // Request to add all the songs from the ones saved in state to the selected playlist.
-  addToPlaylist(offset) {
-    if (this.state.playlistItemUris.length - offset <= 100) {
-      axios.post('/playlist/add',
-      {access_token: this.props.userToken,
-      playlist_id: this.props.playlistId,
-      songs: this.state.playlistItemUris.slice(offset) })
-        .then(() => this.props.updatePlaylists(false))
+  async addToPlaylist() {
+    for (let i = 0; i < this.state.playlistItemUris.length; i = i + 100) {
+      await axios.post('/playlist/add', {access_token: this.props.userToken, playlist_id: this.props.playlistId, songs: this.state.playlistItemUris.slice(i, i + 100)})
         .catch(error => console.log(error))
     }
-    else {
-      axios.post('/playlist/add',
-      {access_token: this.props.userToken,
-      playlist_id: this.props.playlistId,
-      songs: this.state.playlistItemUris.slice(offset, offset + 100) })
-        .then(() => this.addToPlaylist(offset + 100))
-        .catch(error => console.log(error))
-    }
+    this.setState({playlistItemUris: []})
+    this.props.updatePlaylists(false)
   }
 
   // Function to selecte all the songs in the playlist
@@ -527,7 +518,7 @@ class Main extends Component {
                 </Paper>
               :
               <Paper square className={classes.infoPaper}>
-                {this.props.selectedPlaylistInfo.images.length != 0 ?
+                {this.props.selectedPlaylistInfo.images && this.props.selectedPlaylistInfo.images.length != 0 ?
                   <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist Image" className={classes.playlistImage}/>
                   :
                   <div/>
@@ -557,7 +548,7 @@ class Main extends Component {
                     {this.props.selectedPlaylistInfo.description}
                   </Typography>
                   <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
-                    {this.props.selectedPlaylistInfo.owner.display_name}
+                    {this.props.selectedPlaylistInfo.owner && this.props.selectedPlaylistInfo.owner.display_name}
                     <FiberManualRecordIcon classes={{root: classes.dot}}/>
                     {this.state.playlistItems.length} Songs
                   </Typography>

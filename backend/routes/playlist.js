@@ -134,28 +134,26 @@ router.route('/saved_items').delete((req, res) => {
     headers: {Authorization: 'Bearer ' + req.query.access_token},
     params: {ids: req.query.songs.toString()},
   })
-    .then(response => res.json(response.data))
+    .then(response => res.json(response.status))
     .catch(err => res.status(400).json('Error: ' + err))
 });
 
-
-// Not Used Yet
 // Add to the user's saved songs. (max 50)
+// Params:
+// - access_token
+// - songs: array of songs to be added to the users saved songs
 router.route('/saved_items').put((req, res) => {
   axios({
     method: 'put',
     url: 'https://api.spotify.com/v1/me/tracks',
-    headers: {
-      Authorization: 'Bearer ' + req.query.access_token,
-    },
+    headers: {Authorization: 'Bearer ' + req.body.access_token},
     data: {
-      uris: req.body.songs
+      ids: req.body.songs
     },
   })
     .then(response => res.json(response.data))
     .catch(err => res.status(400).json('Error: ' + err))
 });
-
 
 // Get a list of the playlist's songs. (max 100)
 // Params:

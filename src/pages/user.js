@@ -26,7 +26,7 @@ export default class User extends Component {
       .then(res => this.setState({ user: res.data[0] }))
       .catch(error => console.log(error))
     this.timeToRefreshToken()
-    this.getPlaylists(0, true)
+    this.getPlaylists(true)
   }
 
   // Unmounts refresh token timer function
@@ -82,27 +82,29 @@ export default class User extends Component {
   }
 
   // Request all the playlists of the current user.
-  getPlaylists(offset, changeToFirst) {
-    axios.get('/playlist/', {params: {access_token: this.state.user.access_token, offset: offset}})
-      .then(res => {
-        this.setState(previousState => ({
-          playlists: previousState.playlists.concat(res.data.items)
-        }))
-        if (res.data.next) {
-          this.getPlaylists(offset + 50, false)
-        }
-
-        if (res.data.items.length != 0) {
-          if (changeToFirst) {
-            this.selectPlaylist(res.data.items[0].id)
+  getPlaylists = async changeToFirst => {
+    var next = true
+    var songs = []
+    for (var i = 0; next; i = i + 50) {
+      await axios.get('/playlist/', {params: {access_token: this.state.user.access_token, offset: i}})
+        .then(res => {
+          songs = songs.concat(res.data.items)
+          if (res.data.next == null) {
+            next = false
           }
-          else { this.setSelectedPlaylistInfo(this.state.selectedPlaylist) }
-        }
-        else {
-          this.selectPlaylist("Liked Songs")
-        }
-      })
-      .catch(error => console.log(error))
+        })
+        .catch(error => console.log(error))
+    }
+    this.setState({ playlists: songs })
+    if (songs.length != 0) {
+      if (changeToFirst) {
+        this.selectPlaylist(songs[0].id)
+      }
+      else { this.setSelectedPlaylistInfo(this.state.selectedPlaylist) }
+    }
+    else {
+      this.selectPlaylist("Liked Songs")
+    }
   }
 
   // Select the playlist.
@@ -113,22 +115,18 @@ export default class User extends Component {
 
   // When the selected playlist changes, change to the info of the selected playlist.
   setSelectedPlaylistInfo(playlistId) {
-    if (playlistId && playlistId != "Liked Songs") {
-      var result = this.state.playlists.filter(obj => {
-        return obj.id === playlistId
-      })
-      result[0].editable = result[0].owner.id == this.state.user.id
-      this.setState({ selectedPlaylistInfo: result[0] })
+    if (playlistId) {
+      if (playlistId == "Liked Songs") {
+        this.setState({ selectedPlaylistInfo: {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false} })
+      }
+      else {
+        var result = this.state.playlists.filter(obj => {
+          return obj.id === playlistId
+        })
+        result[0].editable = result[0].owner.id == this.state.user.id
+        this.setState({ selectedPlaylistInfo: result[0] })
+      }
     }
-    else if (playlistId != "Liked Songs") {
-      this.setState({ selectedPlaylistInfo: {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false} })
-    }
-  }
-
-  // Refresh the list of playlists.
-  updatePlaylists = changeToFirst => {
-    this.setState({ playlists: [] })
-    this.getPlaylists(0, changeToFirst)
   }
 
   render() {
@@ -153,7 +151,7 @@ export default class User extends Component {
           selectedPlaylist={this.state.selectedPlaylist}
           onSelectPlaylist={this.selectPlaylist}
           playlists={this.state.playlists}
-          updatePlaylists={this.updatePlaylists}
+          updatePlaylists={this.getPlaylists}
         />
         <Main
           userToken={this.state.user.access_token}
@@ -161,7 +159,7 @@ export default class User extends Component {
           displayName={this.state.user.display_name}
           playlistId={this.state.selectedPlaylist}
           selectedPlaylistInfo={this.state.selectedPlaylistInfo}
-          updatePlaylists={this.updatePlaylists}
+          updatePlaylists={this.getPlaylists}
         />
       </div>
     )
