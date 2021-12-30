@@ -37,19 +37,6 @@ const styles = theme => ({
   rootTableContainer: {
     height: "100%"
   },
-  noSongs: {
-    backgroundColor: "transparent",
-    color: "white",
-    width: "90vw",
-    height: "100vh",
-    minWidth: "900px",
-    minHeight: "500px",
-    margin: "0px",
-    display: "flex",
-    textAlign: "center",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   infoPaper: {
     backgroundColor: "#16191d",
     minHeight: "200px",
@@ -64,6 +51,7 @@ const styles = theme => ({
     height: "150px",
     width: "150px",
     marginRight: "30px",
+    fontSize: "100px"
   },
   likedSongsImage: {
     backgroundColor: "#1db954",
@@ -144,6 +132,18 @@ const styles = theme => ({
     backgroundColor: "white",
     height: "24px",
     margin: "12px 11px 0px 16px"
+  },
+  noSongs: {
+    color: "white",
+    width: "100%",
+    height: "calc(100% - 260px)",
+    minWidth: "900px",
+    minHeight: "500px",
+    margin: "0px",
+    display: "flex",
+    textAlign: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerColor: {
     backgroundColor: "#21252b",
@@ -277,6 +277,11 @@ class Main extends Component {
         })
         .catch(error => console.log(error))
     }
+
+    songs.forEach((item, i) => {
+      item.song_number = i
+    })
+
     this.setState({ playlistItems: songs })
   }
 
@@ -294,6 +299,11 @@ class Main extends Component {
         })
         .catch(error => console.log(error))
     }
+
+    songs.forEach((item, i) => {
+      item.song_number = i
+    })
+
     this.setState({ playlistItems: songs })
   }
 
@@ -393,7 +403,7 @@ class Main extends Component {
       await axios.post('/playlist/add', {access_token: this.props.userToken, playlist_id: this.props.playlistId, songs: this.state.playlistItemUris.slice(i, i + 100)})
         .catch(error => console.log(error))
     }
-    this.setState({playlistItemUris: []})
+    this.setState({playlistItemUris: [], update: true})
     this.props.updatePlaylists(false)
   }
 
@@ -411,19 +421,29 @@ class Main extends Component {
   // Handle clicking on one of the songs
   handleClick = (event, song) => {
     const checkedIndex = this.isSelected(song.track.uri)
-    let newChecked = [];
+    var newChecked = this.state.checked;
+    var inserted = false
 
     if (checkedIndex === -1) {
-      newChecked = newChecked.concat(this.state.checked, song);
-    } else if (checkedIndex === 0) {
-      newChecked = newChecked.concat(this.state.checked.slice(1));
-    } else if (checkedIndex === this.state.checked.length - 1) {
-      newChecked = newChecked.concat(this.state.checked.slice(0, -1));
-    } else if (checkedIndex > 0) {
-      newChecked = newChecked.concat(
-        this.state.checked.slice(0, checkedIndex),
-        this.state.checked.slice(checkedIndex + 1),
-      );
+      for (var i = 0; i < this.state.checked.length; i++) {
+        if (song.song_number < this.state.checked[i].song_number) {
+          if (i == 0) {
+            newChecked.unshift(song)
+          }
+          else {
+            newChecked.splice(i, 0, song)
+          }
+          inserted = true
+          break
+        }
+      }
+
+      if (!inserted) {
+        newChecked.push(song)
+      }
+    }
+    else {
+      newChecked.splice(checkedIndex, 1)
     }
 
     this.setState({ checked: newChecked })
@@ -481,109 +501,108 @@ class Main extends Component {
   render() {
     const { classes } = this.props;
 
-    if (this.state.playlistItems.length == 0) {
-      return (
-        <h2 className={classes.noSongs}>
-          There are no songs in this playlist. <br/> Searching for songs is coming soon! <br/> Please go to spotify to add songs to this playlist.
-        </h2>
-      )
-    }
-    else {
-      return (
-        <Paper square className={classes.paper}>
-          <PlaylistModel
-            open={this.state.showModal}
-            closeModal={() => this.setState({ showModal: false, modalInfo: {} })}
-            accessToken={this.props.userToken}
-            modalInfo={this.state.modalInfo}
-            updatePlaylists={this.props.updatePlaylists}
-            updatePlaylistSongs={() => this.setState({ update: true })}
-          />
-          <TableContainer classes={{root: classes.rootTableContainer}}>
-            {this.props.playlistId == "Liked Songs" ?
-                <Paper square className={classes.infoPaper}>
-                  <div className={classes.likedSongsImage}>
-                    <FavoriteIcon className={classes.heartIcon}/>
-                  </div>
-                  <div>
-                    <Typography variant="h3" className={classes.playlistInfo}>
-                      Liked Songs
-                    </Typography>
-                    <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
-                      {this.props.displayName}
-                      <FiberManualRecordIcon classes={{root: classes.dot}}/>
-                      {this.state.playlistItems.length} Songs
-                    </Typography>
-                  </div>
-                </Paper>
-              :
-              <Paper square className={classes.infoPaper}>
-                {this.props.selectedPlaylistInfo.images && this.props.selectedPlaylistInfo.images.length != 0 ?
-                  <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist Image" className={classes.playlistImage}/>
-                  :
-                  <div/>
-                }
-                <div className={classes.playlistInfoContainer}>
-                  <Typography variant="caption" display="block" gutterBottom className={classes.infoPC}>
-                    {this.props.selectedPlaylistInfo.editable ?
-                      <div>
-                        {this.props.selectedPlaylistInfo.public ? "PUBLIC" : "PRIVATE"}
-                        {this.props.selectedPlaylistInfo.collaborative ? <FiberManualRecordIcon className={classes.dotPC}/> : ""}
-                      </div>
-                    :
-                      <div/>}
-                    {this.props.selectedPlaylistInfo.collaborative ? "COLLABORATIVE" : ""}
-                  </Typography>
-                  <Typography variant="h3" className={classes.playlistTitle}>
-                    {this.props.selectedPlaylistInfo.editable ?
-                      <Tooltip title="Edit Playlist Info">
-                        <div onClick={() => this.openModal("EditInfo")} className={classes.playlistClickTitle}>
-                          {this.props.selectedPlaylistInfo.name}
-                        </div>
-                      </Tooltip>
-                    :
-                      this.props.selectedPlaylistInfo.name}
-                  </Typography>
-                  <Typography variant="body2" gutterBottom className={classes.playlistDescription}>
-                    {this.props.selectedPlaylistInfo.description}
-                  </Typography>
-                  <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
-                    {this.props.selectedPlaylistInfo.owner && this.props.selectedPlaylistInfo.owner.display_name}
-                    <FiberManualRecordIcon classes={{root: classes.dot}}/>
-                    {this.state.playlistItems.length} Songs
-                  </Typography>
-                </div>
-              </Paper>
-            }
-
-            <Paper className={classes.toolBar}>
-              <Divider className={classes.divider}/>
-              <div className={classes.tools}>
-                <Tooltip title="Delete Playlist">
-                  <IconButton aria-label="delete" onClick={() => this.openModal("Delete")} className={classes.toolBarButton}>
-                    <DeleteIcon/>
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Duplicate Playlist">
-                  <IconButton aria-label="Duplicate" onClick={() => this.openModal("Duplicate")} className={classes.toolBarButton}>
-                    <FileCopyIcon/>
-                  </IconButton>
-                </Tooltip>
-                {(this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs") && this.state.checked.length ?
-                  <div className={classes.tools}>
-                    <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
-                    <Tooltip title="Delete Songs">
-                      <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
-                        <DeleteSweepIcon/>
-                      </IconButton>
-                    </Tooltip>
-                  </div>
-                :
-                  <div/>
-                }
+    return (
+      <Paper square className={classes.paper}>
+        <PlaylistModel
+          open={this.state.showModal}
+          closeModal={() => this.setState({ showModal: false, modalInfo: {} })}
+          accessToken={this.props.userToken}
+          modalInfo={this.state.modalInfo}
+          updatePlaylists={this.props.updatePlaylists}
+          updatePlaylistSongs={() => this.setState({ update: true })}
+        />
+        <TableContainer classes={{root: classes.rootTableContainer}}>
+          {this.props.playlistId == "Liked Songs" ?
+            <Paper square className={classes.infoPaper}>
+              <div className={classes.likedSongsImage}>
+                <FavoriteIcon className={classes.heartIcon}/>
+              </div>
+              <div>
+                <Typography variant="h3" className={classes.playlistInfo}>
+                  Liked Songs
+                </Typography>
+                <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
+                  {this.props.displayName}
+                  <FiberManualRecordIcon classes={{root: classes.dot}}/>
+                  {this.state.playlistItems.length} Songs
+                </Typography>
               </div>
             </Paper>
+            :
+            <Paper square className={classes.infoPaper}>
+              {this.props.selectedPlaylistInfo.images && this.props.selectedPlaylistInfo.images.length != 0 ?
+                <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist Image" className={classes.playlistImage}/>
+                :
+                <Avatar variant='square' className={classes.playlistImage}>
+                  {this.props.selectedPlaylistInfo.name ? this.props.selectedPlaylistInfo.name[0] : ""}
+                </Avatar>
+              }
+              <div className={classes.playlistInfoContainer}>
+                <Typography variant="caption" display="block" gutterBottom className={classes.infoPC}>
+                  {this.props.selectedPlaylistInfo.editable ?
+                    <div>
+                      {this.props.selectedPlaylistInfo.public ? "PUBLIC" : "PRIVATE"}
+                      {this.props.selectedPlaylistInfo.collaborative ? <FiberManualRecordIcon className={classes.dotPC}/> : ""}
+                    </div>
+                  :
+                    <div/>}
+                  {this.props.selectedPlaylistInfo.collaborative ? "COLLABORATIVE" : ""}
+                </Typography>
+                <Typography variant="h3" className={classes.playlistTitle}>
+                  {this.props.selectedPlaylistInfo.editable ?
+                    <Tooltip title="Edit Playlist Info">
+                      <div onClick={() => this.openModal("EditInfo")} className={classes.playlistClickTitle}>
+                        {this.props.selectedPlaylistInfo.name}
+                      </div>
+                    </Tooltip>
+                  :
+                    this.props.selectedPlaylistInfo.name}
+                </Typography>
+                <Typography variant="body2" gutterBottom className={classes.playlistDescription}>
+                  {this.props.selectedPlaylistInfo.description}
+                </Typography>
+                <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
+                  {this.props.selectedPlaylistInfo.owner && this.props.selectedPlaylistInfo.owner.display_name}
+                  <FiberManualRecordIcon classes={{root: classes.dot}}/>
+                  {this.state.playlistItems.length} Songs
+                </Typography>
+              </div>
+            </Paper>
+          }
 
+          <Paper className={classes.toolBar}>
+            <Divider className={classes.divider}/>
+            <div className={classes.tools}>
+              <Tooltip title="Delete Playlist">
+                <IconButton aria-label="delete" onClick={() => this.openModal("Delete")} className={classes.toolBarButton}>
+                  <DeleteIcon/>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Duplicate Playlist">
+                <IconButton aria-label="Duplicate" onClick={() => this.openModal("Duplicate")} className={classes.toolBarButton}>
+                  <FileCopyIcon/>
+                </IconButton>
+              </Tooltip>
+              {(this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs") && this.state.checked.length ?
+                <div className={classes.tools}>
+                  <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
+                  <Tooltip title="Delete Songs">
+                    <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
+                      <DeleteSweepIcon/>
+                    </IconButton>
+                  </Tooltip>
+                </div>
+              :
+                <div/>
+              }
+            </div>
+          </Paper>
+
+          {this.state.playlistItems.length == 0 ?
+            <h2 className={classes.noSongs}>
+              There are no songs in this playlist. <br/> Searching for songs is coming soon! <br/> Please go to spotify to add songs to this playlist.
+            </h2>
+            :
             <Table stickyHeader size='medium'>
               <TableHead>
                 <TableRow>
@@ -664,10 +683,10 @@ class Main extends Component {
                 })}
               </TableBody>
             </Table>
-          </TableContainer>
-        </Paper>
-      )
-    }
+          }
+        </TableContainer>
+      </Paper>
+    )
   }
 }
 
