@@ -18,6 +18,7 @@ import Paper from '@material-ui/core/Paper';
 import Tooltip from '@material-ui/core/Tooltip';
 
 import PlaylistModel from './modal';
+import Loading from './loading';
 
 const styles = theme => ({
   sidebar: {
@@ -74,14 +75,15 @@ class Sidebar extends Component {
       menuPos: {xPos: 0, yPos: 0},
       modalInfo: {},
       selectedPlaylist: '',
-      editable: false
+      editable: false,
+      loading: false
     }
   }
 
   // If the selected playlist changes then update the selected playlist.
   componentDidUpdate(prevProps) {
     if (this.props.selectedPlaylist !== prevProps.selectedPlaylist) {
-      this.setState({ selectedPlaylist: this.props.selectedPlaylist })
+      this.setState({ selectedPlaylist: this.props.selectedPlaylist, loading: false })
     }
   }
 
@@ -114,12 +116,14 @@ class Sidebar extends Component {
 
     return (
       <Paper className={classes.sidebar}>
+        <Loading isLoading={this.state.loading}/>
         <PlaylistModel
           open={this.state.showModal}
           closeModal={() => this.setState({ showModal: false })}
           accessToken={this.props.userToken}
           modalInfo={this.state.modalInfo}
           updatePlaylists={this.props.updatePlaylists}
+          isLoading={loadingONorOFF => this.setState({ loading: loadingONorOFF})}
         />
         <Tooltip title="New Playlist">
           <Fab

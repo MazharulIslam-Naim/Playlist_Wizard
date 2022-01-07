@@ -136,6 +136,7 @@ class PlaylistModel extends Component {
 
   // Request to create a new playlist.
   createPlaylist = () => {
+    this.props.isLoading(true)
     axios.post('/playlist/new', {access_token: this.props.accessToken, user_id: this.props.modalInfo.userId, name: this.state.name})
       .then(res => {
         this.setState({ newPlaylistId: res.data.id })
@@ -152,6 +153,7 @@ class PlaylistModel extends Component {
 
   // Duplicates the selected playlist.
   duplicatePlaylist = () => {
+    this.props.isLoading(true)
     this.createPlaylist()
     this.setState({ playlistItems: [] })
     if (this.props.modalInfo.uri) {
@@ -233,6 +235,7 @@ class PlaylistModel extends Component {
 
   // Request to edit the info of a playlist.
   editInfoPlaylist = () => {
+    this.props.isLoading(true)
     axios.put('/playlist/edit', {
       access_token: this.props.accessToken,
       playlist_id: this.props.modalInfo.modalType  == "EditInfo" ? this.props.modalInfo.id : this.state.newPlaylistId,
@@ -243,6 +246,7 @@ class PlaylistModel extends Component {
     })
       .then(() => {
         if (this.props.modalInfo.modalType  == "EditInfo") {
+          this.props.isLoading(false)
           this.props.updatePlaylists(false)
           this.props.closeModal()
         }
@@ -252,6 +256,7 @@ class PlaylistModel extends Component {
 
   // Request to delete a playlist.
   deletePlaylist = () => {
+    this.props.isLoading(true)
     axios.delete('/playlist/delete', {params: {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id}})
       .then(() => {
         this.props.updatePlaylists(true)
@@ -279,6 +284,7 @@ class PlaylistModel extends Component {
 
   // Get a list of the uris or ids of the songs that are selected to be deleted from the current playlist or the user's saved songs.
   getSelectedUris = () => {
+    this.props.isLoading(true)
     if (this.props.modalInfo.uri) {
       let songUris = this.state.selected.map((item, i) => {
         return item.track.uri

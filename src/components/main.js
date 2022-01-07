@@ -24,6 +24,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 
+import Loading from './loading';
 import PlaylistModel from './modal';
 
 const styles = theme => ({
@@ -237,7 +238,8 @@ class Main extends Component {
       checked: [],
       showModal: false,
       modalInfo: {},
-      update: false
+      update: false,
+      loading: true
     }
   }
 
@@ -251,7 +253,8 @@ class Main extends Component {
         checked: [],
         showModal: false,
         modalInfo: {},
-        update: false
+        update: false,
+        loading: true
       })
       if (this.props.playlistId == "Liked Songs") {
         this.getSavedItems(0)
@@ -282,7 +285,7 @@ class Main extends Component {
       item.song_number = i
     })
 
-    this.setState({ playlistItems: songs })
+    this.setState({ playlistItems: songs, loading: false })
   }
 
   // Request to get all of the user's saved songs
@@ -304,13 +307,13 @@ class Main extends Component {
       item.song_number = i
     })
 
-    this.setState({ playlistItems: songs })
+    this.setState({ playlistItems: songs, loading: false })
   }
 
   // Sort the songs based on the column header that is clicked
   sortSongs = id => {
     var newDirection = this.state.orderBy != id ? 'asc' : this.state.order == 'asc' ? 'desc' : 'asc'
-    this.setState({ playlistItemUris: [], orderBy: id, order: newDirection })
+    this.setState({ playlistItemUris: [], orderBy: id, order: newDirection, loading: true })
 
     switch(id) {
       case 'Id':
@@ -503,6 +506,7 @@ class Main extends Component {
 
     return (
       <Paper square className={classes.paper}>
+        <Loading isLoading={this.state.loading}/>
         <PlaylistModel
           open={this.state.showModal}
           closeModal={() => this.setState({ showModal: false, modalInfo: {} })}
@@ -510,6 +514,7 @@ class Main extends Component {
           modalInfo={this.state.modalInfo}
           updatePlaylists={this.props.updatePlaylists}
           updatePlaylistSongs={() => this.setState({ update: true })}
+          isLoading={loadingONorOFF => this.setState({ loading: loadingONorOFF})}
         />
         <TableContainer classes={{root: classes.rootTableContainer}}>
           {this.props.playlistId == "Liked Songs" ?
