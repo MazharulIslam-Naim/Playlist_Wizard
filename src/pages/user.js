@@ -5,6 +5,7 @@ import axios from 'axios';
 import Sidebar from '../components/sidebar';
 import Main from '../components/main';
 import Appbar from '../components/appbar';
+import Error from '../components/error';
 
 import Grid from '@material-ui/core/Grid';
 
@@ -16,7 +17,8 @@ export default class User extends Component {
       playlists: [],
       user: {},
       selectedPlaylist: '',
-      selectedPlaylistInfo: {}
+      selectedPlaylistInfo: {},
+      errorAlert: false
     }
   }
 
@@ -77,7 +79,7 @@ export default class User extends Component {
             })
             .catch(error => console.log(error))
         })
-        .catch(error => console.log(error))
+        .catch(error => {console.log(error); this.setState({ errorAlert: true })})
     }
   }
 
@@ -93,7 +95,7 @@ export default class User extends Component {
             next = false
           }
         })
-        .catch(error => console.log(error))
+        .catch(error => {console.log(error); this.setState({ errorAlert: true })})
     }
     this.setState({ playlists: songs })
     if (songs.length != 0) {
@@ -152,6 +154,7 @@ export default class User extends Component {
           onSelectPlaylist={this.selectPlaylist}
           playlists={this.state.playlists}
           updatePlaylists={this.getPlaylists}
+          alertError={() => this.setState({ errorAlert: true })}
         />
         <Main
           userToken={this.state.user.access_token}
@@ -160,7 +163,9 @@ export default class User extends Component {
           playlistId={this.state.selectedPlaylist}
           selectedPlaylistInfo={this.state.selectedPlaylistInfo}
           updatePlaylists={this.getPlaylists}
+          alertError={() => this.setState({ errorAlert: true })}
         />
+        <Error open={this.state.errorAlert} handleClose={() => this.setState({ errorAlert: false })}/>
       </div>
     )
   }

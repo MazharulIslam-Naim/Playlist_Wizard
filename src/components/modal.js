@@ -148,7 +148,7 @@ class PlaylistModel extends Component {
           this.editInfoPlaylist()
         }
       })
-      .catch(error => console.log(error))
+      .catch(error => {console.log(error); this.props.alertError();})
   }
 
   // Duplicates the selected playlist.
@@ -180,7 +180,7 @@ class PlaylistModel extends Component {
           this.addToPlaylist(0)
         }
       })
-      .catch(error => console.log(error))
+      .catch(error => {console.log(error); this.props.alertError();})
   }
 
   // Gets all the songs in the current playlist and saves only the uri of each song.
@@ -201,7 +201,7 @@ class PlaylistModel extends Component {
           this.addToPlaylist(0)
         }
       })
-      .catch(error => console.log(error))
+      .catch(error => {console.log(error); this.props.alertError();})
   }
 
   // Request to add all the songs from the ones saved in state to the selected playlist.
@@ -216,7 +216,7 @@ class PlaylistModel extends Component {
             this.props.updatePlaylists(true)
             this.props.closeModal()
           })
-          .catch(error => console.log(error))
+          .catch(error => {console.log(error); this.props.alertError();})
       }
       else {
         axios.post('/playlist/add',
@@ -224,7 +224,7 @@ class PlaylistModel extends Component {
         playlist_id: this.state.newPlaylistId,
         songs: this.state.playlistItems.slice(offset, offset + 100) })
           .then(() => this.addToPlaylist(offset + 100))
-          .catch(error => console.log(error))
+          .catch(error => {console.log(error); this.props.alertError();})
       }
     }
     else {
@@ -251,7 +251,7 @@ class PlaylistModel extends Component {
           this.props.closeModal()
         }
       })
-      .catch(error => console.log(error))
+      .catch(error => {console.log(error); this.props.alertError();})
   }
 
   // Request to delete a playlist.
@@ -262,7 +262,7 @@ class PlaylistModel extends Component {
         this.props.updatePlaylists(true)
         this.props.closeModal()
       })
-      .catch(error => console.log(error))
+      .catch(error => {console.log(error); this.props.alertError();})
   }
 
   // Change the public button slider.
@@ -312,7 +312,7 @@ class PlaylistModel extends Component {
             this.props.updatePlaylistSongs()
             this.props.closeModal()
           })
-          .catch(error => console.log(error))
+          .catch(error => {console.log(error); this.props.alertError();})
       }
       else {
         axios.delete('/playlist/playlist_items',
@@ -320,7 +320,7 @@ class PlaylistModel extends Component {
         playlist_id: this.props.modalInfo.id,
         songs: uris.slice(offset, offset + 100) }})
           .then(() => this.deleteSongs(uris, offset + 100))
-          .catch(error => console.log(error))
+          .catch(error => {console.log(error); this.props.alertError();})
       }
     }
     else {
@@ -340,14 +340,14 @@ class PlaylistModel extends Component {
             this.props.updatePlaylistSongs()
             this.props.closeModal()
           })
-          .catch(error => console.log(error))
+          .catch(error => {console.log(error); this.props.alertError();})
       }
       else {
         axios.delete('/playlist/saved_items',
         {params: {access_token: this.props.accessToken,
         songs: ids.slice(offset, offset + 50) }})
           .then(() => this.deleteSavedSongs(ids, offset + 50))
-          .catch(error => console.log(error))
+          .catch(error => {console.log(error); this.props.alertError();})
       }
     }
     else {

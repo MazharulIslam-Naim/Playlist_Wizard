@@ -278,7 +278,7 @@ class Main extends Component {
             next = false
           }
         })
-        .catch(error => console.log(error))
+        .catch(error => {console.log(error); this.props.alertError();})
     }
 
     songs.forEach((item, i) => {
@@ -300,7 +300,7 @@ class Main extends Component {
             next = false
           }
         })
-        .catch(error => console.log(error))
+        .catch(error => {console.log(error); this.props.alertError();})
     }
 
     songs.forEach((item, i) => {
@@ -397,14 +397,14 @@ class Main extends Component {
   async clearPlaylistOfSongs () {
     await axios.put('/playlist/replace', {access_token: this.props.userToken, playlist_id: this.props.playlistId, songs: []})
         .then(() => this.addToPlaylist())
-        .catch(error => console.log(error))
+        .catch(error => {console.log(error); this.props.alertError();})
   }
 
   // Request to add all the songs from the ones saved in state to the selected playlist.
   async addToPlaylist() {
     for (let i = 0; i < this.state.playlistItemUris.length; i = i + 100) {
       await axios.post('/playlist/add', {access_token: this.props.userToken, playlist_id: this.props.playlistId, songs: this.state.playlistItemUris.slice(i, i + 100)})
-        .catch(error => console.log(error))
+        .catch(error => {console.log(error); this.props.alertError();})
     }
     this.setState({playlistItemUris: [], update: true})
     this.props.updatePlaylists(false)
@@ -515,6 +515,7 @@ class Main extends Component {
           updatePlaylists={this.props.updatePlaylists}
           updatePlaylistSongs={() => this.setState({ update: true })}
           isLoading={loadingONorOFF => this.setState({ loading: loadingONorOFF})}
+          alertError={this.props.alertError}
         />
         <TableContainer classes={{root: classes.rootTableContainer}}>
           {this.props.playlistId == "Liked Songs" ?

@@ -124,6 +124,7 @@ class Sidebar extends Component {
           modalInfo={this.state.modalInfo}
           updatePlaylists={this.props.updatePlaylists}
           isLoading={loadingONorOFF => this.setState({ loading: loadingONorOFF})}
+          alertError={this.props.alertError}
         />
         <Tooltip title="New Playlist">
           <Fab
