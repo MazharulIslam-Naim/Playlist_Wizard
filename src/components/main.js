@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import { withStyles } from '@material-ui/core/styles';
 
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Avatar from '@material-ui/core/Avatar';
 import Checkbox from '@material-ui/core/Checkbox';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -13,6 +14,7 @@ import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
+import SearchIcon from '@material-ui/icons/Search';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -133,6 +135,26 @@ const styles = theme => ({
     backgroundColor: "white",
     height: "24px",
     margin: "12px 11px 0px 16px"
+  },
+  noSongsArrowUp: {
+    color: "white",
+    position: "relative",
+    left: "151px",
+    animation: `$MoveUpDown 1s linear infinite`,
+  },
+  noSongsArrowUpLS: {
+    color: "white",
+    position: "relative",
+    left: "98px",
+    animation: `$MoveUpDown 1s linear infinite`,
+  },
+  "@keyframes MoveUpDown": {
+    "0%, 100%": {
+      transform: "translateY(0)"
+    },
+    "50%": {
+      transform: "translateY(30px)"
+    }
   },
   noSongs: {
     color: "white",
@@ -467,7 +489,16 @@ class Main extends Component {
 
   // Display the edit info modal.
   openModal = type => {
-    if (type == "DeleteSongs") {
+    if (type == "SearchSongs") {
+      this.setState({
+        showModal: true,
+        modalInfo: {
+          ...this.props.selectedPlaylistInfo,
+          modalType: type,
+        }
+      })
+    }
+    else if (type == "DeleteSongs") {
       this.setState({
         showModal: true,
         modalInfo: {
@@ -579,24 +610,37 @@ class Main extends Component {
           <Paper className={classes.toolBar}>
             <Divider className={classes.divider}/>
             <div className={classes.tools}>
-              <Tooltip title="Delete Playlist">
-                <IconButton aria-label="delete" onClick={() => this.openModal("Delete")} className={classes.toolBarButton}>
-                  <DeleteIcon/>
-                </IconButton>
-              </Tooltip>
+              {this.props.playlistId == "Liked Songs" && this.state.playlistItems.length == 0 ?
+                <div />
+              :
+                <Tooltip title="Delete Playlist">
+                  <IconButton aria-label="delete" onClick={() => this.openModal("Delete")} className={classes.toolBarButton}>
+                    <DeleteIcon/>
+                  </IconButton>
+                </Tooltip>
+              }
               <Tooltip title="Duplicate Playlist">
                 <IconButton aria-label="Duplicate" onClick={() => this.openModal("Duplicate")} className={classes.toolBarButton}>
                   <FileCopyIcon/>
                 </IconButton>
               </Tooltip>
-              {(this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs") && this.state.checked.length ?
+              {this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs" ?
                 <div className={classes.tools}>
                   <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
-                  <Tooltip title="Delete Songs">
-                    <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
-                      <DeleteSweepIcon/>
+                  <Tooltip title="Search for Songs">
+                    <IconButton aria-label="Search" onClick={() => this.openModal("SearchSongs")} className={classes.toolBarButton}>
+                      <SearchIcon/>
                     </IconButton>
                   </Tooltip>
+                  {this.state.checked.length ?
+                    <Tooltip title="Delete Songs">
+                      <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
+                        <DeleteSweepIcon/>
+                      </IconButton>
+                    </Tooltip>
+                  :
+                    <div/>
+                  }
                 </div>
               :
                 <div/>
@@ -605,9 +649,12 @@ class Main extends Component {
           </Paper>
 
           {this.state.playlistItems.length == 0 ?
-            <h2 className={classes.noSongs}>
-              There are no songs in this playlist. <br/> Searching for songs is coming soon! <br/> Please go to spotify to add songs to this playlist.
-            </h2>
+            <div>
+              <ArrowUpwardIcon className={this.props.playlistId == "Liked Songs" ? classes.noSongsArrowUpLS : classes.noSongsArrowUp}/>
+              <h2 className={classes.noSongs}>
+                There are no songs in this playlist. <br/> To search for songs to add to this playlist click to the magnifing glass above. <br/>
+              </h2>
+            </div>
             :
             <Table stickyHeader size='medium'>
               <TableHead>
@@ -652,7 +699,7 @@ class Main extends Component {
                     <TableRow
                       hover
                       role="checkbox"
-                      key={row.track.id}
+                      key={index + ": " + row.track.id}
                       selected={this.isSelected(row.track.uri) != -1}
                       onClick={event => this.handleClick(event, row)}
                       classes={{root: classes.rootTableRow, hover: classes.hover, selected: classes.selected}}

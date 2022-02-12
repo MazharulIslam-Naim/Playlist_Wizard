@@ -83,7 +83,10 @@ class Sidebar extends Component {
   // If the selected playlist changes then update the selected playlist.
   componentDidUpdate(prevProps) {
     if (this.props.selectedPlaylist !== prevProps.selectedPlaylist) {
-      this.setState({ selectedPlaylist: this.props.selectedPlaylist, loading: false })
+      this.setState({ selectedPlaylist: this.props.selectedPlaylist })
+    }
+    if (this.props.playlists.length !== prevProps.playlists.length) {
+      this.setState({ loading: false })
     }
   }
 
@@ -162,8 +165,7 @@ class Sidebar extends Component {
           </ListItem>
           <Divider className={classes.divider}/>
           <div style={{overflowY: "auto"}}>
-          {
-            this.props.playlists.map((playlist, index) => (
+            {this.props.playlists.map((playlist, index) => (
               <ListItem
                 button
                 key={playlist.id}
@@ -189,8 +191,7 @@ class Sidebar extends Component {
 
                 <ListItemText primary={playlist.name} classes={{primary: classes.listItemText}}/>
               </ListItem>
-            ))
-          }
+            ))}
           </div>
           <Menu
             open={this.state.showMenu}

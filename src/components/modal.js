@@ -6,6 +6,10 @@ import { withStyles } from '@material-ui/core/styles';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import ClearIcon from '@material-ui/icons/Clear';
+import IconButton from '@material-ui/core/IconButton';
 import Modal from '@material-ui/core/Modal';
 import Paper from '@material-ui/core/Paper';
 import Switch from '@material-ui/core/Switch';
@@ -25,7 +29,8 @@ const styles = theme => ({
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    maxHeight: "100vh"
+    maxHeight: "100vh",
+    overflow: "auto"
   },
   modalBody: {
     margin: "20px",
@@ -97,8 +102,79 @@ const styles = theme => ({
     '&:hover': {
       backgroundColor: "#ff4d4d",
     },
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: "0",
+    right: "0"
+  },
+  searchForm: {
+    display: "flex",
+    justifyContent: "space-around",
+    marginBottom: "10px",
+  },
+  searchTextField: {
+    margin: "0px 10px",
+  },
+  loadingMoreSongs: {
+    display: "flex",
+    justifyContent: "center",
+  },
+  searchLoading: {
+    color: "grey",
+    margin: "16px"
   }
 });
+
+class AddSongButton extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      currState: "button"
+    }
+  }
+
+  onClick = () => {
+    this.setState({ currState: "loading" })
+    this.props.addSongToPlaylist(this.props.songToAdd)
+      .then(() => this.setState({ currState: "success" }))
+  }
+
+  render() {
+    switch(this.state.currState) {
+      case "button":
+        return (
+          <div>
+            <Button
+              variant="contained"
+              onClick={() => this.onClick()}
+              style={{backgroundColor: "#4fe383"}}
+            >
+              Add
+            </Button>
+          </div>
+        )
+        break;
+      case "loading":
+        return (
+          <div style={{display: "flex", justifyContent: "center"}}>
+            <CircularProgress style={{width: "25px", height: "25px", color: "grey"}}/>
+          </div>
+        )
+        break;
+      case "success":
+        return (
+          <div style={{display: "flex", justifyContent: "center"}}>
+            <CheckCircleOutlineIcon style={{color: "#4fe383", width: "1.5em", height: "1.5em"}}/>
+          </div>
+        )
+        break;
+      default:
+        return <div/>
+    }
+  }
+}
 
 class PlaylistModel extends Component {
   constructor(props) {
@@ -111,7 +187,13 @@ class PlaylistModel extends Component {
       playlistItems: [],
       public: false,
       collaborative: false,
-      selected: []
+      selected: [],
+      query: "",
+      album: "",
+      artist: "",
+      searchReasult: {},
+      songAdded: false,
+      searchLoading: false
     }
   }
 
@@ -353,6 +435,50 @@ class PlaylistModel extends Component {
     else {
       this.props.updatePlaylists(false)
       this.props.closeModal()
+    }
+  }
+
+  // Request to search for songs in Spotify's catalog.
+  searchForSongs = offset => {
+    var query = this.state.query
+    if (this.state.album) {
+      query = query + " album:" + this.state.album
+      if (this.state.artist) {
+        query = query + "+" + "artist:" + this.state.artist
+      }
+    }
+    else if (this.state.artist) {
+      query = query + " artist:" + this.state.artist
+    }
+    query = query.trim()
+
+    axios.get('/playlist/search',
+    {params: {
+      access_token: this.props.accessToken,
+      q: query,
+      offset: offset
+    }})
+      .then(res => this.setState({
+        searchReasult: {
+          next: res.data.tracks.next ? true : false,
+          items: this.state.searchReasult.items ? this.state.searchReasult.items.concat(res.data.tracks.items) : res.data.tracks.items
+        },
+        searchLoading: false
+      }))
+      .catch(error => {console.log(error); this.props.alertError();})
+  }
+
+  addSongToPlaylist = async uri => {
+    this.setState({ songAdded: true })
+    if (this.props.modalInfo.uri) {
+      axios.post('/playlist/add', {access_token: this.props.accessToken, playlist_id: this.props.modalInfo.id, songs: [uri] })
+        .then(() => {return "Added"})
+        .catch(error => {console.log(error); this.props.alertError();})
+    }
+    else {
+      axios.put('/playlist/saved_items', {access_token: this.props.accessToken, songs: [uri.slice(14)]})
+        .then(() => {return "Added"})
+        .catch(error => {console.log(error); this.props.alertError();})
     }
   }
 
@@ -704,6 +830,160 @@ class PlaylistModel extends Component {
     )
   }
 
+  handleScroll = (e) => {
+    const bottom = e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight
+    if (bottom && this.state.searchReasult.next && this.state.searchReasult.items.length < 1000) {
+      this.setState({ searchLoading: true })
+      this.searchForSongs(this.state.searchReasult.items.length)
+    }
+  }
+
+  // Delete selected songs from playlist modal body.
+  searchSongsPLBody() {
+    const { classes } = this.props;
+    // Array of objects of the column headers
+    const headCells = [
+      { id: 'Title', numeric: false, disablePadding: false, label: 'TITLE' },
+      { id: 'Album', numeric: false, disablePadding: false, label: 'ALBUM' },
+      { id: 'Artist', numeric: false, disablePadding: false, label: 'ARTIST' },
+      { id: 'Length', numeric: true, disablePadding: false, label: 'LENGTH' },
+    ];
+
+    return (
+      <Modal
+        open={this.props.open}
+        onClose={() => {
+          this.setState({query: "", album: "", artist: "", searchReasult: {}, songAdded: false})
+          this.props.closeModal()
+          if (this.state.songAdded) this.props.updatePlaylistSongs()
+        }}>
+        <Paper className={classes.paper}>
+          <Tooltip title="Close">
+            <IconButton
+              aria-label="close"
+              onClick={() => {
+                this.setState({query: "", album: "", artist: "", searchReasult: {}, songAdded: false})
+                this.props.closeModal()
+                if (this.state.songAdded) this.props.updatePlaylistSongs()
+              }}
+              className={classes.closeModalButton}
+            >
+              <ClearIcon />
+            </IconButton>
+          </Tooltip>
+          <div className={classes.modalBody}>
+            <h2 className={classes.modalHeader}>Search for songs to add to the playlist <u>{this.props.modalInfo.name}</u>:</h2>
+            <div className={classes.searchForm}>
+              <TextField
+                label="Search"
+                variant="outlined"
+                defaultValue={this.state.query}
+                className={classes.searchTextField}
+                onChange={e => this.setState({ query: e.target.value.trim() })}
+              />
+              <TextField
+                label="Album"
+                variant="outlined"
+                defaultValue={this.state.album}
+                className={classes.searchTextField}
+                onChange={e => this.setState({ album: e.target.value.trim() })}
+              />
+              <TextField
+                label="Artist"
+                variant="outlined"
+                defaultValue={this.state.artist}
+                className={classes.searchTextField}
+                onChange={e => this.setState({ artist: e.target.value.trim() })}
+              />
+              <Button
+                variant="contained"
+                disabled={this.state.query == "" && this.state.album == "" && this.state.artist == ""}
+                onClick={() => {
+                  this.setState({ searchReasult: {} })
+                  this.searchForSongs(0)
+                }}
+                classes={{root: classes.success}}
+              >
+                Search
+              </Button>
+            </div>
+            {this.state.searchReasult.items ?
+              <div>
+                {this.state.searchReasult.items.length ?
+                  <TableContainer classes={{root: classes.rootTableContainer}} onScroll={this.handleScroll}>
+                    <Table stickyHeader size='medium'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell padding="checkbox">
+                          </TableCell>
+                          {headCells.map((headCell) => (
+                            <TableCell
+                              key={headCell.id}
+                              align={headCell.numeric ? 'right' : 'left'}
+                              padding={headCell.disablePadding ? 'none' : 'default'}
+                            >
+                              {headCell.label}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {this.state.searchReasult.items.map((row, index) => {
+                          return (
+                            <TableRow hover key={index + ": " + row.id} classes={{root: classes.rootTableRow, hover: classes.hover}}>
+                              <TableCell padding="checkbox">
+                                <AddSongButton
+                                  songToAdd={row.uri}
+                                  addSongToPlaylist={this.addSongToPlaylist}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div className={classes.titleCell}>
+                                  <Avatar variant='square' alt={row.album.name} src={row.album.images[row.album.images.length - 1].url} />
+                                  <div className={classes.songTitle}>
+                                    {row.name}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{row.album.name}</TableCell>
+                              <TableCell>
+                                {
+                                  row.artists.map(artist => {
+                                    return (
+                                      artist.name
+                                    )
+                                  }).join(", ")
+                                }
+                              </TableCell>
+                              <TableCell align="right">
+                                {Math.floor(row.duration_ms / 60000) + ":" + ("0" + Math.floor((row.duration_ms % 60000) / 1000)).substr(-2)}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                    {this.state.searchLoading ?
+                      <div className={classes.loadingMoreSongs}>
+                        <CircularProgress classes={{root: classes.searchLoading}} style={{width: "25px", height: "25px"}}/>
+                      </div>
+                    :
+                      <div />
+                    }
+                  </TableContainer>
+                :
+                  <h3 className={classes.modalHeader}>No songs matched your search, please try again.</h3>
+                }
+              </div>
+            :
+              <div />
+            }
+          </div>
+        </Paper>
+      </Modal>
+    )
+  }
+
   render() {
     const { classes } = this.props;
 
@@ -722,6 +1002,9 @@ class PlaylistModel extends Component {
         break;
       case "DeleteSongs":
         return this.deleteSongsPLBody()
+        break;
+      case "SearchSongs":
+        return this.searchSongsPLBody()
         break;
       default:
         return <div/>

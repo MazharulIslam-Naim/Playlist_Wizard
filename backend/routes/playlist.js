@@ -141,7 +141,7 @@ router.route('/saved_items').delete((req, res) => {
 // Add to the user's saved songs. (max 50)
 // Params:
 // - access_token
-// - songs: array of songs to be added to the users saved songs
+// - songs: array of the id's of the songs to be added to the users saved songs
 router.route('/saved_items').put((req, res) => {
   axios({
     method: 'put',
@@ -233,6 +233,31 @@ router.route('/playlist_items').delete((req, res) => {
     },
   })
     .then(() => res.json('Songs removed from playlist.'))
+    .catch(err => res.status(400).json('Error: ' + err))
+});
+
+// Search for an item Spotify's catalog
+// Params:
+// - access_token
+// - q: query
+// - offset: the index where the result array should start from
+// Return:
+// - an object with the songs that are closest match to the query
+router.route('/search').get((req, res) => {
+  axios({
+    method: 'get',
+    url: 'https://api.spotify.com/v1/search',
+    headers: {
+      Authorization: 'Bearer ' + req.query.access_token,
+    },
+    params: {
+      q: req.query.q,
+      type: "track",
+      limit: 50,
+      offset: req.query.offset
+    },
+  })
+    .then(response => res.json(response.data))
     .catch(err => res.status(400).json('Error: ' + err))
 });
 
