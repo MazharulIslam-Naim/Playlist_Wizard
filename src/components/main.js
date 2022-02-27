@@ -3,18 +3,19 @@ import axios from 'axios';
 
 import { withStyles } from '@material-ui/core/styles';
 
+import MoveSongsIcon from '@material-ui/icons/ArrowForwardIos';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Avatar from '@material-ui/core/Avatar';
 import Checkbox from '@material-ui/core/Checkbox';
-import DeleteIcon from '@material-ui/icons/Delete';
-import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
+import DeletePlaylistIcon from '@material-ui/icons/Delete';
+import DeleteSongsIcon from '@material-ui/icons/DeleteSweep';
 import Divider from '@material-ui/core/Divider';
-import FavoriteIcon from '@material-ui/icons/Favorite';
-import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import HeartIcon from '@material-ui/icons/Favorite';
+import DotIcon from '@material-ui/icons/FiberManualRecord';
+import DuplicatePlaylistIcon from '@material-ui/icons/FileCopy';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
-import SearchIcon from '@material-ui/icons/Search';
+import SearchSongsIcon from '@material-ui/icons/Search';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -28,6 +29,7 @@ import Typography from '@material-ui/core/Typography';
 
 import Loading from './loading';
 import PlaylistModel from './modal';
+import Menu from './menu';
 
 const styles = theme => ({
   paper: {
@@ -261,7 +263,9 @@ class Main extends Component {
       showModal: false,
       modalInfo: {},
       update: false,
-      loading: true
+      loading: true,
+      showMoveToMenu: false,
+      menuButtonElement: null
     }
   }
 
@@ -276,7 +280,9 @@ class Main extends Component {
         showModal: false,
         modalInfo: {},
         update: false,
-        loading: true
+        loading: true,
+        showMoveToMenu: false,
+        menuButtonElement: null
       })
       if (this.props.playlistId == "Liked Songs") {
         this.getSavedItems(0)
@@ -552,7 +558,7 @@ class Main extends Component {
           {this.props.playlistId == "Liked Songs" ?
             <Paper square className={classes.infoPaper}>
               <div className={classes.likedSongsImage}>
-                <FavoriteIcon className={classes.heartIcon}/>
+                <HeartIcon className={classes.heartIcon}/>
               </div>
               <div>
                 <Typography variant="h3" className={classes.playlistInfo}>
@@ -560,7 +566,7 @@ class Main extends Component {
                 </Typography>
                 <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
                   {this.props.displayName}
-                  <FiberManualRecordIcon classes={{root: classes.dot}}/>
+                  <DotIcon classes={{root: classes.dot}}/>
                   {this.state.playlistItems.length} Songs
                 </Typography>
               </div>
@@ -579,7 +585,7 @@ class Main extends Component {
                   {this.props.selectedPlaylistInfo.editable ?
                     <div>
                       {this.props.selectedPlaylistInfo.public ? "PUBLIC" : "PRIVATE"}
-                      {this.props.selectedPlaylistInfo.collaborative ? <FiberManualRecordIcon className={classes.dotPC}/> : ""}
+                      {this.props.selectedPlaylistInfo.collaborative ? <DotIcon className={classes.dotPC}/> : ""}
                     </div>
                   :
                     <div/>}
@@ -600,7 +606,7 @@ class Main extends Component {
                 </Typography>
                 <Typography variant="body1" gutterBottom className={classes.playlistInfo}>
                   {this.props.selectedPlaylistInfo.owner && this.props.selectedPlaylistInfo.owner.display_name}
-                  <FiberManualRecordIcon classes={{root: classes.dot}}/>
+                  <DotIcon classes={{root: classes.dot}}/>
                   {this.state.playlistItems.length} Songs
                 </Typography>
               </div>
@@ -615,13 +621,13 @@ class Main extends Component {
               :
                 <Tooltip title="Delete Playlist">
                   <IconButton aria-label="delete" onClick={() => this.openModal("Delete")} className={classes.toolBarButton}>
-                    <DeleteIcon/>
+                    <DeletePlaylistIcon/>
                   </IconButton>
                 </Tooltip>
               }
               <Tooltip title="Duplicate Playlist">
                 <IconButton aria-label="Duplicate" onClick={() => this.openModal("Duplicate")} className={classes.toolBarButton}>
-                  <FileCopyIcon/>
+                  <DuplicatePlaylistIcon/>
                 </IconButton>
               </Tooltip>
               {this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs" ?
@@ -629,21 +635,79 @@ class Main extends Component {
                   <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
                   <Tooltip title="Search for Songs">
                     <IconButton aria-label="Search" onClick={() => this.openModal("SearchSongs")} className={classes.toolBarButton}>
-                      <SearchIcon/>
+                      <SearchSongsIcon/>
                     </IconButton>
                   </Tooltip>
                   {this.state.checked.length ?
-                    <Tooltip title="Delete Songs">
-                      <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
-                        <DeleteSweepIcon/>
-                      </IconButton>
-                    </Tooltip>
+                    <div>
+                      <Tooltip title="Move to">
+                        <IconButton
+                          aria-label="move"
+                          onClick={event => this.setState({ showMoveToMenu: true, menuButtonElement: event.currentTarget })}
+                          className={classes.toolBarButton}
+                        >
+                          <MoveSongsIcon/>
+                        </IconButton>
+                      </Tooltip>
+                      <Menu
+                        open={this.state.showMoveToMenu}
+                        closeMenu={() => this.setState({ showMoveToMenu: false, menuButtonElement: null })}
+                        anchorEl={this.state.menuButtonElement}
+                        accessToken={this.props.userToken}
+                        updatePlaylists={this.props.updatePlaylists}
+                        updatePlaylistSongs={() => this.setState({ update: true })}
+                        isLoading={loadingONorOFF => this.setState({ loading: loadingONorOFF})}
+                        alertError={this.props.alertError}
+                        currentPlaylistId={this.props.playlistId}
+                        playlists={this.props.playlists}
+                        userId={this.props.userId}
+                        songs={this.state.checked}
+                        editable={this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs"}
+                      />
+                      <Tooltip title="Delete Songs">
+                        <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
+                          <DeleteSongsIcon/>
+                        </IconButton>
+                      </Tooltip>
+                    </div>
                   :
                     <div/>
                   }
                 </div>
               :
-                <div/>
+              <div>
+                {this.state.checked.length ?
+                  <div className={classes.tools}>
+                    <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
+                    <Tooltip title="Move to">
+                      <IconButton
+                        aria-label="move"
+                        onClick={event => this.setState({ showMoveToMenu: true, menuButtonElement: event.currentTarget })}
+                        className={classes.toolBarButton}
+                      >
+                        <MoveSongsIcon/>
+                      </IconButton>
+                    </Tooltip>
+                    <Menu
+                      open={this.state.showMoveToMenu}
+                      closeMenu={() => this.setState({ showMoveToMenu: false, menuButtonElement: null })}
+                      anchorEl={this.state.menuButtonElement}
+                      accessToken={this.props.userToken}
+                      updatePlaylists={this.props.updatePlaylists}
+                      updatePlaylistSongs={() => this.setState({ update: true })}
+                      isLoading={loadingONorOFF => this.setState({ loading: loadingONorOFF})}
+                      alertError={this.props.alertError}
+                      currentPlaylistId={this.props.playlistId}
+                      playlists={this.props.playlists}
+                      userId={this.props.userId}
+                      songs={this.state.checked}
+                      editable={this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs"}
+                    />
+                  </div>
+                :
+                  <div/>
+                }
+              </div>
               }
             </div>
           </Paper>

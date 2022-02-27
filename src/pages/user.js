@@ -164,6 +164,7 @@ export default class User extends Component {
           selectedPlaylistInfo={this.state.selectedPlaylistInfo}
           updatePlaylists={this.getPlaylists}
           alertError={() => this.setState({ errorAlert: true })}
+          playlists={this.state.playlists}
         />
         <Error open={this.state.errorAlert} handleClose={() => this.setState({ errorAlert: false })}/>
       </div>

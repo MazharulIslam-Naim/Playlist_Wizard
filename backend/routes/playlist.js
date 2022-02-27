@@ -180,7 +180,7 @@ router.route('/playlist_items').get((req, res) => {
 // Params:
 // - access_token
 // - playlist_id
-// - songs: array of songs to be added to the playlist
+// - songs: array of song uris to be added to the playlist
 router.route('/add').post((req, res) => {
   axios({
     method: 'post',
