@@ -1,0 +1,37 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.0.2
+  heroku: circleci/heroku@1.2.6
+
+jobs:
+  test: # this can be any name you choose
+    executor: node/default # use the default executor defined within the orb
+    steps:
+      - checkout
+      - run:
+          command: npm run test
+          name: Run tests
+      - store_test_results:
+          path: test-results
+
+  deploy: # this can be any name you choose
+    executor: heroku/default
+    steps:
+      - attach_workspace:
+          at: .
+      - heroku/deploy-via-git:
+          force: true # force push when pushing to the heroku remote, see: https://devcenter.heroku.com/articles/git
+workflows:
+  build_and_test:
+      jobs:
+        - test
+        - hold:
+            type: approval
+            requires:
+              - test
+        - deploy:
+            requires:
+              - hold
+            filters:
+              branches:
+                only: main # only deploy when on main

@@ -162,7 +162,9 @@ class Menu extends Component {
     setTimeout(() => {
       this.props.isLoading(false)
       this.props.closeMenu()
-      this.props.updatePlaylistSongs()
+      if (this.state.deleteFromCurrent) {
+        this.props.updatePlaylistSongs()
+      }
       this.props.updatePlaylists(false)
     }, 3000)
   }
