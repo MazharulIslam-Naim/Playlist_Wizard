@@ -8,6 +8,10 @@ jobs:
     executor: node/default # use the default executor defined within the orb
     steps:
       - checkout
+      - run: sudo npm install -g npm@latest
+      - node/install-packages:
+          cache-path: node_modules
+          override-ci-command: npm install 
       - run:
           command: npm run test
           name: Run tests
