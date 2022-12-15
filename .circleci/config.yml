@@ -11,7 +11,7 @@ jobs:
       - run: sudo npm install -g npm@latest
       - node/install-packages:
           cache-path: node_modules
-          override-ci-command: npm install 
+          override-ci-command: npm install
       - run:
           command: npm run test
           name: Run tests
@@ -26,7 +26,7 @@ jobs:
       - heroku/deploy-via-git:
           force: true # force push when pushing to the heroku remote, see: https://devcenter.heroku.com/articles/git
 workflows:
-  build_and_test:
+  test_and_deploy:
       jobs:
         - test
         - hold:
