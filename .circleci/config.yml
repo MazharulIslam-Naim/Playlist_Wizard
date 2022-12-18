@@ -25,10 +25,9 @@ jobs:
       - attach_workspace:
           at: .
       - heroku/deploy-via-git:
-          parameters:
-            api-key: $HEROKU_API_KEY
-            app-name: $HEROKU_APP_NAME
-            force: true
+          api-key: HEROKU_API_KEY
+          app-name: HEROKU_APP_NAME
+          force: true
 workflows:
   test_and_deploy:
       jobs:
