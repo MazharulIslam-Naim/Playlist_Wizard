@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@5.0.2
-  heroku: circleci/heroku@1.2.6
+  heroku: circleci/heroku@2.0
 
 jobs:
   test: # this can be any name you choose
@@ -21,10 +21,14 @@ jobs:
   deploy: # this can be any name you choose
     executor: heroku/default
     steps:
+      - checkout
       - attach_workspace:
           at: .
       - heroku/deploy-via-git:
-          force: true # force push when pushing to the heroku remote, see: https://devcenter.heroku.com/articles/git
+          parameters:
+            api-key: $HEROKU_API_KEY
+            app-name: $HEROKU_APP_NAME
+            force: true
 workflows:
   test_and_deploy:
       jobs:
