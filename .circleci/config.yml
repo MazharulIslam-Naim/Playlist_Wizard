@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@5.0.3
-  awsEB: circleci/aws-elastic-beanstalk@2.0.1
+  eb: circleci/aws-elastic-beanstalk@2.0.1
 
 jobs:
   test:
@@ -19,9 +19,11 @@ jobs:
           path: test-results
 
   awsEb_setup:
-    executor: awsEB/default
+    docker:
+      - image: 'cimg/base:stable'
     steps:
-      - awsEB/setup
+      - checkout
+      - eb/setup
 workflows:
   test_and_deploy:
       jobs:
