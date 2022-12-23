@@ -1,11 +1,11 @@
 version: 2.1
 orbs:
-  node: circleci/node@5.0.2
-  heroku: circleci/heroku@2.0
+  node: circleci/node@5.0.3
+  awsEB: circleci/aws-elastic-beanstalk@2.0.1
 
 jobs:
-  test: # this can be any name you choose
-    executor: node/default # use the default executor defined within the orb
+  test:
+    executor: node/default
     steps:
       - checkout
       - run: sudo npm install -g npm@latest
@@ -18,16 +18,10 @@ jobs:
       - store_test_results:
           path: test-results
 
-  deploy: # this can be any name you choose
-    executor: heroku/default
+  awsEb_setup:
+    executor: awsEB/default
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - heroku/deploy-via-git:
-          api-key: HEROKU_API_KEY
-          app-name: $HEROKU_APP_NAME
-          force: true
+      - awsEB/setup
 workflows:
   test_and_deploy:
       jobs:
@@ -36,7 +30,9 @@ workflows:
             type: approval
             requires:
               - test
-        - deploy:
+        - awsEb_setup
+        - eb/deploy:
+            environment-name: Playlistwizard-env
             requires:
               - hold
             filters:
