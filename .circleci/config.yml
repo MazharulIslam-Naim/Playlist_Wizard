@@ -34,7 +34,7 @@ workflows:
               - test
         - awsEb_setup
         - eb/deploy:
-            application-name: $application_name
+            application-name: Playlist_Wizard
             environment-name: Playlistwizard-env
             requires:
               - hold
