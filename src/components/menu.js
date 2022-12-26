@@ -80,19 +80,19 @@ class Menu extends Component {
 
   // When the menu opens, figure out which playlists you can add songs to. When menu is closed, clear the state.
   componentDidUpdate(prevProps) {
-    if (prevProps.open == false && this.props.open == true) {
+    if (prevProps.open === false && this.props.open === true) {
       let editablePlaylists = []
-      if (this.props.currentPlaylistId != "Liked Songs") {
+      if (this.props.currentPlaylistId !== "Liked Songs") {
         editablePlaylists.push({id: "Liked Songs", name: "Liked Songs" })
       }
       this.props.playlists.forEach(playlist => {
-        if (playlist.id != this.props.currentPlaylistId && (playlist.collaborative || playlist.owner.id == this.props.userId)) {
+        if (playlist.id !== this.props.currentPlaylistId && (playlist.collaborative || playlist.owner.id === this.props.userId)) {
           editablePlaylists.push(playlist)
         }
       })
       this.setState({ editablePlaylists: editablePlaylists })
     }
-    else if (prevProps.open == true && this.props.open == false) {
+    else if (prevProps.open === true && this.props.open === false) {
       this.setState({ playlistsToMoveTo: [], newPlaylistName: "", deleteFromCurrent: false, editablePlaylists: [], songUris: [], songIds: [] })
     }
   }
@@ -117,7 +117,7 @@ class Menu extends Component {
   handleClick = (uri) => {
     const checkedIndex = this.isSelected(uri)
 
-    if (checkedIndex == -1) {
+    if (checkedIndex === -1) {
       this.setState({ playlistsToMoveTo: this.state.playlistsToMoveTo.concat([uri]) })
     }
     else {
@@ -147,7 +147,7 @@ class Menu extends Component {
     }
 
     this.state.playlistsToMoveTo.forEach(id => {
-      if (id == "Liked Songs") {
+      if (id === "Liked Songs") {
         this.addToSavedSongs()
       }
       else {
@@ -179,7 +179,7 @@ class Menu extends Component {
 
   // Makes requests to the backend to add each song to the user's saved songs.
   addToSavedSongs() {
-    for (var i = 0; i < this.state.songIds.length; i=i+50) {
+    for (let i = 0; i < this.state.songIds.length; i=i+50) {
       axios.put('/playlist/saved_items', {access_token: this.props.accessToken, songs: this.state.songIds.slice(i, i+50)})
         .catch(error => {console.log(error); this.props.alertError();})
     }
@@ -187,7 +187,7 @@ class Menu extends Component {
 
   // Makes requests to the backend to add each song to the playlist.
   addToPlaylist(playlistId) {
-    for (var i = 0; i < this.state.songUris.length; i=i+50) {
+    for (let i = 0; i < this.state.songUris.length; i=i+50) {
       axios.post('/playlist/add', {access_token: this.props.accessToken, playlist_id: playlistId, songs: this.state.songUris.slice(i, i+50)})
         .catch(error => {console.log(error); this.props.alertError();})
     }
@@ -195,14 +195,14 @@ class Menu extends Component {
 
   // Makes requests to the backend to delete the selected songs from the current playlist or the user's saved songs.
   deleteSongs() {
-    if (this.props.currentPlaylistId == "Liked Songs") {
-      for (var i = 0; i < this.state.songIds.length; i=i+50) {
+    if (this.props.currentPlaylistId === "Liked Songs") {
+      for (let i = 0; i < this.state.songIds.length; i=i+50) {
         axios.delete('/playlist/saved_items', {params: {access_token: this.props.accessToken, songs: this.state.songIds.slice(i, i+50)}})
           .catch(error => {console.log(error); this.props.alertError();})
       }
     }
     else {
-      for (var i = 0; i < this.state.songUris.length; i=i+50) {
+      for (let i = 0; i < this.state.songUris.length; i=i+50) {
         axios.delete('/playlist/playlist_items', {params: {
           access_token: this.props.accessToken,
           playlist_id: this.props.currentPlaylistId,
@@ -234,7 +234,7 @@ class Menu extends Component {
         <div className={classes.newPlaylistContainer}>
           <Checkbox
             className={classes.newPlaylistCheckbox}
-            disabled={this.state.newPlaylistName == ""}
+            disabled={this.state.newPlaylistName === ""}
             checked={Boolean(this.state.newPlaylistName)}
           />
           <TextField
@@ -246,7 +246,7 @@ class Menu extends Component {
           />
         </div>
 
-        {this.props.playlists.length == 0 ?
+        {this.props.playlists.length === 0 ?
           <div />
         :
           <ListItem
@@ -256,7 +256,7 @@ class Menu extends Component {
             classes={{root: classes.playlistButton}}
           >
             <ListItemIcon className={classes.checkboxContainer}>
-              <Checkbox checked={this.state.editablePlaylists.length == this.state.playlistsToMoveTo.length} className={classes.checkbox}/>
+              <Checkbox checked={this.state.editablePlaylists.length === this.state.playlistsToMoveTo.length} className={classes.checkbox}/>
             </ListItemIcon>
             <ListItemAvatar>
               <Avatar variant='square' className={classes.allAvatar}>
@@ -276,19 +276,19 @@ class Menu extends Component {
               classes={{root: classes.playlistButton}}
             >
               <ListItemIcon className={classes.checkboxContainer}>
-                <Checkbox checked={this.isSelected(playlist.id) != -1} className={classes.checkbox}/>
+                <Checkbox checked={this.isSelected(playlist.id) !== -1} className={classes.checkbox}/>
               </ListItemIcon>
               <ListItemAvatar>
-                {playlist.id == "Liked Songs" ?
+                {playlist.id === "Liked Songs" ?
                   <Avatar variant='square' className={classes.likedSongsAvatar}>
                     <FavoriteIcon />
                   </Avatar>
                 :
-                  playlist.images.length != 0 ?
+                  playlist.images.length !== 0 ?
                     <Avatar variant='square' alt={playlist.name} src={playlist.images[playlist.images.length - 1].url} />
                   :
                     <Avatar variant='square'>
-                      {playlist.name.[0]}
+                      {playlist.name[0]}
                     </Avatar>
                 }
               </ListItemAvatar>
@@ -313,7 +313,7 @@ class Menu extends Component {
 
         <Button
           variant="contained"
-          disabled={this.state.playlistsToMoveTo.length == 0 && this.state.newPlaylistName == ""}
+          disabled={this.state.playlistsToMoveTo.length === 0 && this.state.newPlaylistName === ""}
           onClick={() => this.getAllSongIdsUris()}
           classes={{root: classes.moveButton}}
         >

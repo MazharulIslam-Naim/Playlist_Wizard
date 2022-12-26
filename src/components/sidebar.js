@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 
 import { withStyles } from '@material-ui/core/styles';
 
@@ -96,11 +95,11 @@ class Sidebar extends Component {
     this.setState({
       showMenu: true,
       menuPos: {xPos: e.clientX, yPos: e.clientY},
-      modalInfo: playlistInfo == "Liked Songs" ?
+      modalInfo: playlistInfo === "Liked Songs" ?
         {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false}
       :
         playlistInfo,
-      editable: playlistInfo != "Liked Songs" &&  playlistInfo.owner.id == this.props.userId
+      editable: playlistInfo !== "Liked Songs" &&  playlistInfo.owner.id === this.props.userId
     })
   }
 
@@ -147,7 +146,7 @@ class Sidebar extends Component {
           <ListItem
             button
             key="Liked Songs"
-            selected={this.state.selectedPlaylist == "Liked Songs"}
+            selected={this.state.selectedPlaylist === "Liked Songs"}
             onClick={() => {
               this.props.onSelectPlaylist("Liked Songs")
               this.setState({ selectedPlaylist: "Liked Songs" })
@@ -169,7 +168,7 @@ class Sidebar extends Component {
               <ListItem
                 button
                 key={playlist.id}
-                selected={this.state.selectedPlaylist == playlist.id}
+                selected={this.state.selectedPlaylist === playlist.id}
                 onClick={() => {
                   this.props.onSelectPlaylist(playlist.id)
                   this.setState({ selectedPlaylist: playlist.id })
@@ -177,14 +176,14 @@ class Sidebar extends Component {
                 onContextMenu={ev => this.showContextMenu(ev, playlist)}
                 classes={{root: classes.playlistButton, button: classes.button, selected: classes.selected}}
               >
-                {playlist.images.length != 0 ?
+                {playlist.images.length !== 0 ?
                   <ListItemAvatar>
                     <Avatar variant='square' alt={playlist.name} src={playlist.images[playlist.images.length - 1].url} />
                   </ListItemAvatar>
                   :
                   <ListItemAvatar>
                     <Avatar variant='square'>
-                      {playlist.name.[0]}
+                      {playlist.name[0]}
                     </Avatar>
                   </ListItemAvatar>
                 }

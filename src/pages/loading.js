@@ -5,8 +5,6 @@ import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import './login.css';
 
-var url = require('url');
-
 export default class Loading extends Component {
   constructor(props) {
     super(props);
@@ -22,13 +20,13 @@ export default class Loading extends Component {
 
   // Parse the current url for the spotify code then request tokens from spotify.
   componentDidMount() {
-    var urlp = url.parse(document.URL, true)
-    var urldata = urlp.query
-    if (!urldata.code) {
+    const queryString = window.location.search
+    const urlParams = new URLSearchParams(queryString);
+    if (!urlParams.get('code')) {
       this.setState({ redirect: 'homepage' })
     }
     else {
-      axios.post('/authorize/code', {code: urldata.code})
+      axios.post('/authorize/code', {code: urlParams.get('code')})
         .then(res => {
           this.setState({ authToken: res.data })
           this.getUser()
@@ -54,7 +52,7 @@ export default class Loading extends Component {
   userFind() {
     axios.get('/user/' + this.state.email)
       .then(res => {
-        if (res.data.length == 0) {
+        if (res.data.length === 0) {
           // Create user in database if user doesn't exist.
           this.userCreate()
         } else {
@@ -110,9 +108,9 @@ export default class Loading extends Component {
   }
 
   render() {
-    if (this.state.redirect == 'homepage') {
+    if (this.state.redirect === 'homepage') {
       return <Redirect to="/" push />
-    } else if (this.state.redirect == 'user') {
+    } else if (this.state.redirect === 'user') {
       return <Redirect to={{
                 pathname: "/user",
                 state: { email: this.state.email }
