@@ -28,11 +28,15 @@ workflows:
   test_and_deploy:
       jobs:
         - test
+        - node/run:
+          npm-run: build
+        - awsEb_setup
         - hold:
             type: approval
             requires:
+              - node/run
               - test
-        - awsEb_setup
+              - awsEb_setup
         - eb/deploy:
             application-name: Playlist_Wizard
             environment-name: Playlistwizard-env
