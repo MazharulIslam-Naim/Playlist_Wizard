@@ -155,21 +155,18 @@ class AddSongButton extends Component {
             </Button>
           </div>
         )
-        break;
       case "loading":
         return (
           <div style={{display: "flex", justifyContent: "center"}}>
             <CircularProgress style={{width: "25px", height: "25px", color: "grey"}}/>
           </div>
         )
-        break;
       case "success":
         return (
           <div style={{display: "flex", justifyContent: "center"}}>
             <CheckCircleOutlineIcon style={{color: "#4fe383", width: "1.5em", height: "1.5em"}}/>
           </div>
         )
-        break;
       default:
         return <div/>
     }
@@ -222,11 +219,11 @@ class PlaylistModel extends Component {
     axios.post('/playlist/new', {access_token: this.props.accessToken, user_id: this.props.modalInfo.userId, name: this.state.name})
       .then(res => {
         this.setState({ newPlaylistId: res.data.id })
-        if (this.props.modalInfo.modalType  == "New") {
+        if (this.props.modalInfo.modalType  === "New") {
           this.props.updatePlaylists(true)
           this.props.closeModal()
         }
-        if (this.props.modalInfo.modalType  == "Duplicate") {
+        if (this.props.modalInfo.modalType  === "Duplicate") {
           this.editInfoPlaylist()
         }
       })
@@ -320,14 +317,14 @@ class PlaylistModel extends Component {
     this.props.isLoading(true)
     axios.put('/playlist/edit', {
       access_token: this.props.accessToken,
-      playlist_id: this.props.modalInfo.modalType  == "EditInfo" ? this.props.modalInfo.id : this.state.newPlaylistId,
+      playlist_id: this.props.modalInfo.modalType  === "EditInfo" ? this.props.modalInfo.id : this.state.newPlaylistId,
       name: this.state.name,
       description: this.state.description,
       public: this.state.public,
       collaborative: this.state.collaborative
     })
       .then(() => {
-        if (this.props.modalInfo.modalType  == "EditInfo") {
+        if (this.props.modalInfo.modalType  === "EditInfo") {
           this.props.isLoading(false)
           this.props.updatePlaylists(false)
           this.props.closeModal()
@@ -440,11 +437,11 @@ class PlaylistModel extends Component {
 
   // Request to search for songs in Spotify's catalog.
   searchForSongs = offset => {
-    var query = this.state.query
+    let query = this.state.query
     if (this.state.album) {
       query = query + " album:" + this.state.album
       if (this.state.artist) {
-        query = query + "+" + "artist:" + this.state.artist
+        query = query + "+ artist:" + this.state.artist
       }
     }
     else if (this.state.artist) {
@@ -500,7 +497,7 @@ class PlaylistModel extends Component {
             <div className={classes.buttons}>
               <Button
                 variant="contained"
-                disabled={this.state.name == ""}
+                disabled={this.state.name === ""}
                 onClick={() => this.createPlaylist()}
                 classes={{root: classes.success}}
               >
@@ -569,7 +566,7 @@ class PlaylistModel extends Component {
             <div className={classes.buttons}>
               <Button
                 variant="contained"
-                disabled={this.state.name == ""}
+                disabled={this.state.name === ""}
                 onClick={() => this.duplicatePlaylist()}
                 classes={{root: classes.success}}
               >
@@ -639,7 +636,7 @@ class PlaylistModel extends Component {
             <div className={classes.buttons}>
               <Button
                 variant="contained"
-                disabled={this.state.name == "" || (this.props.modalInfo.description ? !this.state.description : false)}
+                disabled={this.state.name === "" || (this.props.modalInfo.description ? !this.state.description : false)}
                 onClick={() => this.editInfoPlaylist()}
                 classes={{root: classes.success}}
               >
@@ -694,7 +691,7 @@ class PlaylistModel extends Component {
   }
 
   // Function to see if a song is selected or not
-  isSelected = (uri) => this.state.selected.findIndex(selected => selected.track.uri == uri)
+  isSelected = (uri) => this.state.selected.findIndex(selected => selected.track.uri === uri)
 
   // Handle clicking on one of the songs
   handleClick = (event, song) => {
@@ -719,11 +716,11 @@ class PlaylistModel extends Component {
 
   // Read spotify's timestamp in to string.
   timestampToString(timestamp) {
-    var date = new Date(Date.parse(timestamp))
-    var minutes = "0" + date.getMinutes()
-    var seconds = "0" + date.getSeconds()
-    var hours = date.getHours() % 12 == 0 ? 12 : date.getHours() % 12
-    var timeOfDay = date.getHours() < 12 ? "AM" : "PM"
+    let date = new Date(Date.parse(timestamp))
+    let minutes = "0" + date.getMinutes()
+    let seconds = "0" + date.getSeconds()
+    let hours = date.getHours() % 12 === 0 ? 12 : date.getHours() % 12
+    let timeOfDay = date.getHours() < 12 ? "AM" : "PM"
     return (
       (date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear() + " " +
       hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2) + timeOfDay
@@ -755,7 +752,7 @@ class PlaylistModel extends Component {
                     <TableCell padding="checkbox">
                       <Checkbox
                         indeterminate={0 < this.state.selected.length && this.state.selected.length < this.props.modalInfo.songs.length}
-                        checked={this.state.selected.length == this.props.modalInfo.songs.length}
+                        checked={this.state.selected.length === this.props.modalInfo.songs.length}
                         onChange={event => this.handleSelectAllClick(event)}
                       />
                     </TableCell>
@@ -777,12 +774,12 @@ class PlaylistModel extends Component {
                         hover
                         role="checkbox"
                         key={row.track.id}
-                        selected={this.isSelected(row.track.uri) != -1}
+                        selected={this.isSelected(row.track.uri) !== -1}
                         onClick={event => this.handleClick(event, row)}
                         classes={{root: classes.rootTableRow, hover: classes.hover}}
                       >
                         <TableCell padding="checkbox">
-                          <Checkbox checked={this.isSelected(row.track.uri) != -1}/>
+                          <Checkbox checked={this.isSelected(row.track.uri) !== -1}/>
                         </TableCell>
                         <TableCell align="right">{index+1}</TableCell>
                         <TableCell>
@@ -816,7 +813,7 @@ class PlaylistModel extends Component {
             <div className={classes.buttons}>
               <Button
                 variant="contained"
-                disabled={this.state.selected.length == 0}
+                disabled={this.state.selected.length === 0}
                 onClick={() => this.getSelectedUris()}
                 classes={{root: classes.delete}}
               >
@@ -897,7 +894,7 @@ class PlaylistModel extends Component {
               />
               <Button
                 variant="contained"
-                disabled={this.state.query == "" && this.state.album == "" && this.state.artist == ""}
+                disabled={this.state.query === "" && this.state.album === "" && this.state.artist === ""}
                 onClick={() => {
                   this.setState({ searchReasult: {} })
                   this.searchForSongs(0)
@@ -985,27 +982,19 @@ class PlaylistModel extends Component {
   }
 
   render() {
-    const { classes } = this.props;
-
     switch(this.props.modalInfo.modalType) {
       case "New":
         return this.newPLBody()
-        break;
       case "Duplicate":
         return this.duplicatePLBody()
-        break;
       case "EditInfo":
         return this.editInfoPLBody()
-        break;
       case "Delete":
         return this.deletePLBody()
-        break;
       case "DeleteSongs":
         return this.deleteSongsPLBody()
-        break;
       case "SearchSongs":
         return this.searchSongsPLBody()
-        break;
       default:
         return <div/>
     }

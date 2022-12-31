@@ -23,19 +23,9 @@ const styles = theme => ({
 });
 
 class Loading extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-
-    }
-  }
-
-
-
   render() {
     const { classes } = this.props;
-    
+
     return (
       <div>
         {this.props.isLoading ?

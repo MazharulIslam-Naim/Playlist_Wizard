@@ -4,10 +4,7 @@ import axios from 'axios';
 
 import Sidebar from '../components/sidebar';
 import Main from '../components/main';
-import Appbar from '../components/appbar';
 import Error from '../components/error';
-
-import Grid from '@material-ui/core/Grid';
 
 export default class User extends Component {
   constructor(props) {
@@ -41,8 +38,8 @@ export default class User extends Component {
 
   // Calls the refreshToken function a minute before the token expires.
   timeToRefreshToken() {
-    var currTime = new Date()
-    var expireTime = new Date(this.state.user.expire_time)
+    let currTime = new Date()
+    let expireTime = new Date(this.state.user.expire_time)
 
     if (expireTime <= currTime) {
       this.refreshToken()
@@ -54,8 +51,8 @@ export default class User extends Component {
 
   // Refresh the access token and add it to the database.
   refreshToken() {
-    var currTime = new Date()
-    var expireTime = new Date(this.state.user.expire_time)
+    let currTime = new Date()
+    let expireTime = new Date(this.state.user.expire_time)
 
     if (expireTime <= currTime) {
       axios.post('/user/refresh_token/', {refresh_token: this.state.user.refresh_token})
@@ -74,7 +71,7 @@ export default class User extends Component {
           this.setState({ user: newToken })
           axios.post('/user/update', newToken)
             .then(res => {
-              console.log(res.data + " " + "Access token refreshed.")
+              console.log(res.data + " Access token refreshed.")
               this.timeToRefreshToken()
             })
             .catch(error => console.log(error))
@@ -85,22 +82,26 @@ export default class User extends Component {
 
   // Request all the playlists of the current user.
   getPlaylists = async changeToFirst => {
-    var next = true
-    var songs = []
-    for (var i = 0; next; i = i + 50) {
+    for (let i = 0; true; i = i + 50) {
+      let next = true
       await axios.get('/playlist/', {params: {access_token: this.state.user.access_token, offset: i}})
         .then(res => {
-          songs = songs.concat(res.data.items)
+          let playlists = res.data.items
+          this.setState(state => ({
+            playlists: state.playlists.concat(playlists)
+          }));
           if (res.data.next == null) {
             next = false
           }
         })
         .catch(error => {console.log(error); this.setState({ errorAlert: true })})
+
+        if (!next) break
     }
-    this.setState({ playlists: songs })
-    if (songs.length != 0) {
+
+    if (this.state.playlists.length !== 0) {
       if (changeToFirst) {
-        this.selectPlaylist(songs[0].id)
+        this.selectPlaylist(this.state.playlists[0].id)
       }
       else { this.setSelectedPlaylistInfo(this.state.selectedPlaylist) }
     }
@@ -118,14 +119,14 @@ export default class User extends Component {
   // When the selected playlist changes, change to the info of the selected playlist.
   setSelectedPlaylistInfo(playlistId) {
     if (playlistId) {
-      if (playlistId == "Liked Songs") {
+      if (playlistId === "Liked Songs") {
         this.setState({ selectedPlaylistInfo: {name: "Liked Songs", description: "", public: true, collaborative: false, editable : false} })
       }
       else {
-        var result = this.state.playlists.filter(obj => {
+        let result = this.state.playlists.filter(obj => {
           return obj.id === playlistId
         })
-        result[0].editable = result[0].owner.id == this.state.user.id
+        result[0].editable = result[0].owner.id === this.state.user.id
         this.setState({ selectedPlaylistInfo: result[0] })
       }
     }
@@ -133,7 +134,7 @@ export default class User extends Component {
 
   render() {
     try {
-      if (this.props.location.state.email == 'undefined') {}
+      if (this.props.location.state.email === 'undefined') {}
     }
     catch(e) {
       return <Redirect to="/" push />

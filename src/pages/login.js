@@ -5,10 +5,6 @@ import axios from 'axios';
 import './login.css';
 
 export default class Login extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   // Function called when the user clicks to login. Gets the url to redirt to
   // spotify login.
   onLogin = () => {

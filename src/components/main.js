@@ -23,7 +23,6 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 
@@ -271,7 +270,7 @@ class Main extends Component {
 
   // If the playlist seleceted changes then update
   componentDidUpdate(prevProps) {
-    if (this.props.playlistId !== prevProps.playlistId || this.state.update == true) {
+    if (this.props.playlistId !== prevProps.playlistId || this.state.update === true) {
       this.setState({
         playlistItems: [],
         orderBy: 'Id',
@@ -284,7 +283,7 @@ class Main extends Component {
         showMoveToMenu: false,
         menuButtonElement: null
       })
-      if (this.props.playlistId == "Liked Songs") {
+      if (this.props.playlistId === "Liked Songs") {
         this.getSavedItems(0)
       }
       else {
@@ -296,51 +295,57 @@ class Main extends Component {
 
   // Request to get all the songs of the selected palylist
   async getPlaylistItems(offset) {
-    var next = true
-    var songs = []
-    for (var i = 0; next; i = i + 100) {
+    for (let i = 0; true; i = i + 100) {
+      let next = true
       await axios.get('/playlist/playlist_items', {params: {access_token: this.props.userToken, playlist_id: this.props.playlistId, offset: i}})
         .then(res => {
-          songs = songs.concat(res.data.items)
+          let songs = res.data.items
+          songs.forEach((item, index) => {
+            item.song_number = i + index
+          })
+          this.setState(state => ({
+            playlistItems: state.playlistItems.concat(songs)
+          }));
           if (res.data.next == null) {
             next = false
           }
         })
         .catch(error => {console.log(error); this.props.alertError();})
+
+        if (!next) break
     }
 
-    songs.forEach((item, i) => {
-      item.song_number = i
-    })
-
-    this.setState({ playlistItems: songs, loading: false })
+    this.setState({ loading: false })
   }
 
   // Request to get all of the user's saved songs
   async getSavedItems(offset) {
-    var next = true
-    var songs = []
-    for (var i = 0; next; i = i + 50) {
+    for (let i = 0; true; i = i + 50) {
+      let next = true
       await axios.get('/playlist/saved_items', {params: {access_token: this.props.userToken, offset: i} })
         .then(res => {
-          songs = songs.concat(res.data.items)
+          let songs = res.data.items
+          songs.forEach((item, index) => {
+            item.song_number = i + index
+          })
+          this.setState(state => ({
+            playlistItems: state.playlistItems.concat(songs)
+          }));
           if (res.data.next == null) {
             next = false
           }
         })
         .catch(error => {console.log(error); this.props.alertError();})
+
+        if (!next) break
     }
 
-    songs.forEach((item, i) => {
-      item.song_number = i
-    })
-
-    this.setState({ playlistItems: songs, loading: false })
+    this.setState({ loading: false })
   }
 
   // Sort the songs based on the column header that is clicked
   sortSongs = id => {
-    var newDirection = this.state.orderBy != id ? 'asc' : this.state.order == 'asc' ? 'desc' : 'asc'
+    let newDirection = this.state.orderBy !== id ? 'asc' : this.state.order === 'asc' ? 'desc' : 'asc'
     this.setState({ playlistItemUris: [], orderBy: id, order: newDirection, loading: true })
 
     switch(id) {
@@ -364,10 +369,10 @@ class Main extends Component {
       case 'Artist':
         this.state.playlistItems.sort(
           function(a, b) {
-            if (a.track.artists[0].name.localeCompare(b.track.artists[0].name) == 0) {
-              if (a.track.artists.length - b.track.artists.length == 0) {
-                for (var i = 1; i < a.track.artists.length; i++) {
-                  if (a.track.artists[i].name.localeCompare(b.track.artists[i].name) == 0) {
+            if (a.track.artists[0].name.localeCompare(b.track.artists[0].name) === 0) {
+              if (a.track.artists.length - b.track.artists.length === 0) {
+                for (let i = 1; i < a.track.artists.length; i++) {
+                  if (a.track.artists[i].name.localeCompare(b.track.artists[i].name) === 0) {
                     continue
                   }
                   return a.track.artists[i].name.localeCompare(b.track.artists[i].name)
@@ -389,8 +394,8 @@ class Main extends Component {
       case 'Date Added':
         this.state.playlistItems.sort(
           function(a, b) {
-            var aDate = new Date(Date.parse(a.added_at))
-            var bDate = new Date(Date.parse(b.added_at))
+            let aDate = new Date(Date.parse(a.added_at))
+            let bDate = new Date(Date.parse(b.added_at))
 
             if (aDate > bDate) {
               return 1
@@ -402,9 +407,11 @@ class Main extends Component {
           }
         )
         break;
+      default:
+
     }
 
-    if (newDirection == 'desc' && id != 'Id') {
+    if (newDirection === 'desc' && id !== 'Id') {
       this.setState({ playlistItems: this.state.playlistItems.reverse() })
     }
 
@@ -447,18 +454,18 @@ class Main extends Component {
   }
 
   // Function to see if a song is selected or not
-  isSelected = (uri) => this.state.checked.findIndex(selected => selected.track.uri == uri)
+  isSelected = (uri) => this.state.checked.findIndex(selected => selected.track.uri === uri)
 
   // Handle clicking on one of the songs
   handleClick = (event, song) => {
     const checkedIndex = this.isSelected(song.track.uri)
-    var newChecked = this.state.checked;
-    var inserted = false
+    let newChecked = this.state.checked;
+    let inserted = false
 
     if (checkedIndex === -1) {
-      for (var i = 0; i < this.state.checked.length; i++) {
+      for (let i = 0; i < this.state.checked.length; i++) {
         if (song.song_number < this.state.checked[i].song_number) {
-          if (i == 0) {
+          if (i === 0) {
             newChecked.unshift(song)
           }
           else {
@@ -482,11 +489,11 @@ class Main extends Component {
 
   // Read spotify's timestamp in to string.
   timestampToString(timestamp) {
-    var date = new Date(Date.parse(timestamp))
-    var minutes = "0" + date.getMinutes()
-    var seconds = "0" + date.getSeconds()
-    var hours = date.getHours() % 12 == 0 ? 12 : date.getHours() % 12
-    var timeOfDay = date.getHours() < 12 ? "AM" : "PM"
+    let date = new Date(Date.parse(timestamp))
+    let minutes = "0" + date.getMinutes()
+    let seconds = "0" + date.getSeconds()
+    let hours = date.getHours() % 12 === 0 ? 12 : date.getHours() % 12
+    let timeOfDay = date.getHours() < 12 ? "AM" : "PM"
     return (
       (date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear() + " " +
       hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2) + timeOfDay
@@ -495,7 +502,7 @@ class Main extends Component {
 
   // Display the edit info modal.
   openModal = type => {
-    if (type == "SearchSongs") {
+    if (type === "SearchSongs") {
       this.setState({
         showModal: true,
         modalInfo: {
@@ -504,7 +511,7 @@ class Main extends Component {
         }
       })
     }
-    else if (type == "DeleteSongs") {
+    else if (type === "DeleteSongs") {
       this.setState({
         showModal: true,
         modalInfo: {
@@ -515,7 +522,7 @@ class Main extends Component {
         }
       })
     }
-    else if (this.props.playlistId == "Liked Songs" && type == "Delete") {
+    else if (this.props.playlistId === "Liked Songs" && type === "Delete") {
       this.setState({
         showModal: true,
         modalInfo: {
@@ -555,7 +562,7 @@ class Main extends Component {
           alertError={this.props.alertError}
         />
         <TableContainer classes={{root: classes.rootTableContainer}}>
-          {this.props.playlistId == "Liked Songs" ?
+          {this.props.playlistId === "Liked Songs" ?
             <Paper square className={classes.infoPaper}>
               <div className={classes.likedSongsImage}>
                 <HeartIcon className={classes.heartIcon}/>
@@ -573,8 +580,8 @@ class Main extends Component {
             </Paper>
             :
             <Paper square className={classes.infoPaper}>
-              {this.props.selectedPlaylistInfo.images && this.props.selectedPlaylistInfo.images.length != 0 ?
-                <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist Image" className={classes.playlistImage}/>
+              {this.props.selectedPlaylistInfo.images && this.props.selectedPlaylistInfo.images.length !== 0 ?
+                <img src={this.props.selectedPlaylistInfo.images[0].url} alt="Playlist" className={classes.playlistImage}/>
                 :
                 <Avatar variant='square' className={classes.playlistImage}>
                   {this.props.selectedPlaylistInfo.name ? this.props.selectedPlaylistInfo.name[0] : ""}
@@ -616,7 +623,7 @@ class Main extends Component {
           <Paper className={classes.toolBar}>
             <Divider className={classes.divider}/>
             <div className={classes.tools}>
-              {this.props.playlistId == "Liked Songs" && this.state.playlistItems.length == 0 ?
+              {this.props.playlistId === "Liked Songs" && this.state.playlistItems.length === 0 ?
                 <div />
               :
                 <Tooltip title="Delete Playlist">
@@ -630,7 +637,7 @@ class Main extends Component {
                   <DuplicatePlaylistIcon/>
                 </IconButton>
               </Tooltip>
-              {this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs" ?
+              {this.props.selectedPlaylistInfo.editable || this.props.playlistId === "Liked Songs" ?
                 <div className={classes.tools}>
                   <Divider orientation="vertical" variant="middle" flexItem className={classes.horizantalDivider}/>
                   <Tooltip title="Search for Songs">
@@ -662,7 +669,7 @@ class Main extends Component {
                         playlists={this.props.playlists}
                         userId={this.props.userId}
                         songs={this.state.checked}
-                        editable={this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs"}
+                        editable={this.props.selectedPlaylistInfo.editable || this.props.playlistId === "Liked Songs"}
                       />
                       <Tooltip title="Delete Songs">
                         <IconButton aria-label="delete" onClick={() => this.openModal("DeleteSongs")} className={classes.toolBarButton}>
@@ -701,7 +708,7 @@ class Main extends Component {
                       playlists={this.props.playlists}
                       userId={this.props.userId}
                       songs={this.state.checked}
-                      editable={this.props.selectedPlaylistInfo.editable || this.props.playlistId == "Liked Songs"}
+                      editable={this.props.selectedPlaylistInfo.editable || this.props.playlistId === "Liked Songs"}
                     />
                   </div>
                 :
@@ -712,9 +719,9 @@ class Main extends Component {
             </div>
           </Paper>
 
-          {this.state.playlistItems.length == 0 ?
+          {this.state.playlistItems.length === 0 ?
             <div>
-              <ArrowUpwardIcon className={this.props.playlistId == "Liked Songs" ? classes.noSongsArrowUpLS : classes.noSongsArrowUp}/>
+              <ArrowUpwardIcon className={this.props.playlistId === "Liked Songs" ? classes.noSongsArrowUpLS : classes.noSongsArrowUp}/>
               <h2 className={classes.noSongs}>
                 There are no songs in this playlist. <br/> To search for songs to add to this playlist click to the magnifing glass above. <br/>
               </h2>
@@ -726,7 +733,7 @@ class Main extends Component {
                   <TableCell padding="checkbox" classes={{stickyHeader: classes.headerColor}}>
                     <Checkbox
                       indeterminate={0 < this.state.checked.length && this.state.checked.length < this.state.playlistItems.length}
-                      checked={this.state.checked.length == this.state.playlistItems.length}
+                      checked={this.state.checked.length === this.state.playlistItems.length}
                       onChange={event => this.handleSelectAllClick(event)}
                       classes={{root: classes.icon, colorSecondary: classes.colorSecondaryCheckbox, checked: classes.checked}}
                     />
@@ -764,13 +771,13 @@ class Main extends Component {
                       hover
                       role="checkbox"
                       key={index + ": " + row.track.id}
-                      selected={this.isSelected(row.track.uri) != -1}
+                      selected={this.isSelected(row.track.uri) !== -1}
                       onClick={event => this.handleClick(event, row)}
                       classes={{root: classes.rootTableRow, hover: classes.hover, selected: classes.selected}}
                     >
                       <TableCell padding="checkbox" className={classes.tableCell}>
                         <Checkbox
-                          checked={this.isSelected(row.track.uri) != -1}
+                          checked={this.isSelected(row.track.uri) !== -1}
                           classes={{root: classes.icon, colorSecondary: classes.colorSecondaryCheckbox, checked: classes.checked}}
                         />
                       </TableCell>
