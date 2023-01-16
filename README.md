@@ -19,7 +19,7 @@ You will also see any lint errors in the console.
 
 in another console go to the backend folder and run
 
-### `nodemon server`
+### `nodemon bin/www`
 
 Runs a express server using MongoDB as the database.
 
