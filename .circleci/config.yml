@@ -4,7 +4,7 @@ orbs:
   eb: circleci/aws-elastic-beanstalk@2.0.1
 
 jobs:
-  build_and_test:
+  install_and_test:
     executor: node/default
     steps:
       - checkout
@@ -12,9 +12,6 @@ jobs:
       - node/install-packages:
           cache-path: node_modules
           override-ci-command: npm install
-      - run:
-          command: npm run build
-          name: Run build
       - run:
           command: npm run test
           name: Run tests
@@ -28,14 +25,14 @@ jobs:
       - checkout
       - eb/setup
 workflows:
-  build_test_and_deploy:
+  test_and_deploy:
       jobs:
-        - build_and_test
+        - install_and_test
         - awsEb_setup
         - hold:
             type: approval
             requires:
-              - build_and_test
+              - install_and_test
               - awsEb_setup
         - eb/deploy:
             application-name: Playlist_Wizard
