@@ -1,1 +1,4 @@
 /.circleci
+
+.git
+.gitignore
