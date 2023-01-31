@@ -1,5 +1,1 @@
-/build
-.git
 /.circleci
-node_modules
-.env
