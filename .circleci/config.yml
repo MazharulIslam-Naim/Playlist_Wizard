@@ -13,6 +13,13 @@ jobs:
           cache-path: node_modules
           override-ci-command: npm install
       - run:
+          command: npm run build
+          name: Run build
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build
+      - run:
           command: npm run test
           name: Run tests
       - store_test_results:
@@ -34,11 +41,15 @@ workflows:
             requires:
               - install_build_and_test
               - awsEb_setup
-        - eb/deploy:
-            application-name: Playlist_Wizard
-            environment-name: Playlistwizard-env
-            requires:
-              - hold
-            filters:
-              branches:
-                only: main # only deploy when on main
+        AWSEB_deploy:
+          steps:
+            - attach_workspace:
+              at: /
+            - eb/deploy:
+                application-name: Playlist_Wizard
+                environment-name: Playlistwizard-env
+                requires:
+                  - hold
+                filters:
+                  branches:
+                    only: main # only deploy when on main
