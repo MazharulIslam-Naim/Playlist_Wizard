@@ -16,7 +16,7 @@ jobs:
           command: npm run build
           name: Run build
       - persist_to_workspace:
-          root: /
+          root: ~/project
           paths:
             - build
       - run:
@@ -31,7 +31,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /
+          at: ~/project
       - eb/setup
       - run:
           command: |
