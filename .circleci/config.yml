@@ -19,6 +19,7 @@ jobs:
           root: ~/project
           paths:
             - build
+            - node_modules
       - run:
           command: npm run test
           name: Run tests
@@ -36,7 +37,7 @@ jobs:
       - run:
           command: |
             eb init Playlist_Wizard -r $AWS_DEFAULT_REGION -p node.js
-            eb deploy Playlistwizard-env
+            eb deploy Playlistwizard-env --timeout 60
             eb status
           name: AWS EB setup and deploy
 workflows:
