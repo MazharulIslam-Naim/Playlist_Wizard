@@ -25,31 +25,31 @@ jobs:
       - store_test_results:
           path: test-results
 
-  awsEb_setup:
+  awsEb_deploy:
     docker:
       - image: 'cimg/base:stable'
     steps:
       - checkout
+      - attach_workspace:
+          at: /
       - eb/setup
+      - run:
+          command: |
+            eb init Playlist_Wizard -r $AWS_DEFAULT_REGION -p node.js
+            eb deploy Playlistwizard-env
+            eb status
+          name: AWS EB setup and deploy
 workflows:
   test_and_deploy:
       jobs:
         - install_build_and_test
-        - awsEb_setup
         - hold:
             type: approval
             requires:
               - install_build_and_test
-              - awsEb_setup
-        AWSEB_deploy:
-          steps:
-            - attach_workspace:
-              at: /
-            - eb/deploy:
-                application-name: Playlist_Wizard
-                environment-name: Playlistwizard-env
-                requires:
-                  - hold
-                filters:
-                  branches:
-                    only: main # only deploy when on main
+        - AWSEB_deploy:
+            requires:
+              - hold
+            filters:
+              branches:
+                only: main # only deploy when on main
