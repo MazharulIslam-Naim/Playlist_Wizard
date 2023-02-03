@@ -47,7 +47,7 @@ workflows:
             type: approval
             requires:
               - install_build_and_test
-        - AWSEB_deploy:
+        - awsEb_deploy:
             requires:
               - hold
             filters:
